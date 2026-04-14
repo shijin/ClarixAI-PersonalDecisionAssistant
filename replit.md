@@ -4,7 +4,38 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
-## Stack
+## Artifacts
+
+### Clarix (`artifacts/clarix`) — React + Vite app at `/`
+
+AI personal decision assistant. Helps users make confident decisions about finances, career, and life.
+
+**Stack:**
+- React + Vite (JSX — note: `.jsx` entry point, not `.tsx`)
+- Tailwind CSS v4 (via `@tailwindcss/vite`) with custom design tokens in `src/index.css`
+- `react-router-dom` v6 for routing
+- `@supabase/supabase-js` for auth + database
+- Font: Plus Jakarta Sans
+
+**Required env vars:**
+- `VITE_SUPABASE_URL` — Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key
+- `VITE_CLAUDE_API_KEY` — Claude API key (for AI features)
+
+**Structure:**
+- `src/App.jsx` — Root router with all routes defined
+- `src/constants/routes.js` — All route path constants
+- `src/constants/prompts.js` — AI system prompt + prompt builder
+- `src/context/UserContext.jsx` — Supabase auth state context
+- `src/lib/supabase.js` — Supabase client
+- `src/lib/claude.js` — Claude client (stub)
+- `src/hooks/` — `useAuth.js`, `useDecision.js` (stubs)
+- `src/components/ui/` — Button, Card, Input, Tag, Toast, Spinner
+- `src/components/layout/` — BottomNav, NavBar, StatusBar
+- `src/components/decision/` — DecisionCard, RecommendationBlock, AssumptionStrip, TradeoffCard
+- `src/screens/` — All placeholder screens organized by flow
+
+## Shared Infrastructure
 
 - **Monorepo tool**: pnpm workspaces
 - **Node.js version**: 24

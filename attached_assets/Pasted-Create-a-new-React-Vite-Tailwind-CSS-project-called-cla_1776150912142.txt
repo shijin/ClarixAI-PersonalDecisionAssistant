@@ -1,0 +1,614 @@
+Create a new React + Vite + Tailwind CSS project called "clarix" with the following exact setup. Follow every instruction in order.
+
+─────────────────────────────────────
+PART 1 — INITIALIZE THE PROJECT
+─────────────────────────────────────
+
+The project should already exist as a Vite + React template. If not, run:
+npm create vite@latest clarix -- --template react
+cd clarix
+npm install
+
+Then install all dependencies:
+npm install react-router-dom@6
+npm install @supabase/supabase-js
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+─────────────────────────────────────
+PART 2 — TAILWIND CONFIGURATION
+─────────────────────────────────────
+
+Replace the contents of tailwind.config.js with exactly this:
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          purple:      '#534AB7',
+          'purple-dark':  '#3C3489',
+          'purple-mid':   '#7F77DD',
+          'purple-light': '#EEEDFE',
+          teal:        '#0F6E56',
+          'teal-mid':  '#1D9E75',
+          'teal-light':'#E1F5EE',
+        },
+        ink: {
+          100: '#1A1917',
+          80:  '#3D3D3A',
+          50:  '#73726C',
+          30:  '#9C9A92',
+        },
+        surface: {
+          0: '#FFFFFF',
+          1: '#F7F6F3',
+          2: '#EFEDE8',
+          3: '#E5E3DC',
+        },
+        semantic: {
+          success:        '#1D9E75',
+          'success-bg':   '#E1F5EE',
+          'success-dark': '#085041',
+          warning:        '#BA7517',
+          'warning-bg':   '#FAEEDA',
+          'warning-dark': '#633806',
+          error:          '#A32D2D',
+          'error-bg':     '#FCEBEB',
+          'error-dark':   '#501313',
+          info:           '#185FA5',
+          'info-bg':      '#E6F1FB',
+          'info-dark':    '#042C53',
+        },
+      },
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      fontSize: {
+        'display': ['28px', { lineHeight: '1.2', fontWeight: '800' }],
+        'h1':      ['22px', { lineHeight: '1.3', fontWeight: '700' }],
+        'h2':      ['18px', { lineHeight: '1.35', fontWeight: '600' }],
+        'h3':      ['15px', { lineHeight: '1.4', fontWeight: '600' }],
+        'body-lg': ['15px', { lineHeight: '1.65', fontWeight: '400' }],
+        'body-sm': ['13px', { lineHeight: '1.6', fontWeight: '400' }],
+        'caption': ['11px', { lineHeight: '1.5', fontWeight: '500' }],
+        'label':   ['12px', { lineHeight: '1', fontWeight: '600' }],
+      },
+      borderRadius: {
+        'xs': '4px',
+        'sm': '8px',
+        'md': '12px',
+        'lg': '16px',
+        'xl': '20px',
+        'pill': '999px',
+      },
+      spacing: {
+        'screen-x': '20px',
+        'card-x':   '20px',
+        'card-y':   '16px',
+      },
+    },
+  },
+  plugins: [],
+}
+
+─────────────────────────────────────
+PART 3 — GLOBAL CSS
+─────────────────────────────────────
+
+Replace the contents of src/index.css with exactly this:
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-surface-1 text-ink-100 font-sans;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    position: relative;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 h-12 px-6 bg-brand-purple text-white text-[15px] font-bold rounded-md border-none cursor-pointer w-full transition-colors duration-150;
+  }
+  .btn-primary:hover  { @apply bg-brand-purple-dark; }
+  .btn-primary:active { @apply scale-[0.98]; }
+  .btn-primary:disabled {
+    @apply bg-surface-3 text-ink-30 cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 h-12 px-6 bg-transparent text-brand-purple text-[15px] font-bold rounded-md border-[1.5px] border-brand-purple cursor-pointer w-full transition-all duration-150;
+  }
+  .btn-secondary:hover  { @apply bg-brand-purple-light; }
+  .btn-secondary:active { @apply scale-[0.98]; }
+  .btn-secondary:disabled {
+    @apply border-ink-30 text-ink-30 cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply flex items-center justify-center gap-2 h-11 px-5 bg-transparent text-ink-80 text-[14px] font-medium rounded-sm border border-[rgba(26,25,23,0.12)] cursor-pointer w-full transition-all duration-150;
+  }
+  .btn-ghost:hover  { @apply bg-surface-2; }
+  .btn-ghost:active { @apply scale-[0.98]; }
+
+  /* Cards */
+  .card {
+    @apply bg-surface-0 border border-[rgba(26,25,23,0.08)] rounded-md p-[16px_20px];
+  }
+  .card-elevated {
+    @apply bg-surface-0 border border-[rgba(26,25,23,0.14)] rounded-md p-[16px_20px];
+  }
+  .card-tinted {
+    @apply bg-brand-purple-light border border-[rgba(83,74,183,0.15)] rounded-md p-[16px_20px];
+  }
+  .card-teal {
+    @apply bg-brand-teal-light border border-[rgba(15,110,86,0.2)] rounded-md p-[16px_20px];
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply h-12 px-[14px] text-[15px] text-ink-100 bg-surface-0 border-[1.5px] border-[rgba(26,25,23,0.14)] rounded-sm w-full transition-colors duration-150 outline-none font-sans;
+  }
+  .input-field:hover   { @apply border-[rgba(26,25,23,0.22)]; }
+  .input-field:focus   { @apply border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.12)]; }
+  .input-field.error   { @apply border-semantic-error; }
+  .input-field:disabled {
+    @apply bg-surface-2 text-ink-30 cursor-not-allowed;
+  }
+
+  .textarea-field {
+    @apply px-[14px] py-[12px] text-[15px] text-ink-100 bg-surface-0 border-[1.5px] border-[rgba(26,25,23,0.14)] rounded-md w-full transition-colors duration-150 outline-none font-sans resize-none leading-[1.65] min-h-[88px];
+  }
+  .textarea-field:hover  { @apply border-[rgba(26,25,23,0.22)]; }
+  .textarea-field:focus  { @apply border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.12)]; }
+
+  /* Tags */
+  .tag {
+    @apply inline-flex items-center h-7 px-[10px] text-[12px] font-semibold rounded-pill border-[1.5px];
+  }
+  .tag-purple  { @apply bg-brand-purple-light text-brand-purple-dark border-[rgba(83,74,183,0.25)]; }
+  .tag-teal    { @apply bg-brand-teal-light text-brand-teal border-[rgba(15,110,86,0.25)]; }
+  .tag-neutral { @apply bg-surface-2 text-ink-80 border-[rgba(26,25,23,0.14)]; }
+  .tag-success { @apply bg-semantic-success-bg text-semantic-success-dark border-[rgba(29,158,117,0.25)]; }
+  .tag-warning { @apply bg-semantic-warning-bg text-semantic-warning-dark border-[rgba(186,117,23,0.25)]; }
+  .tag-error   { @apply bg-semantic-error-bg text-semantic-error-dark border-[rgba(163,45,45,0.2)]; }
+
+  /* Screen wrapper */
+  .screen {
+    @apply min-h-dvh flex flex-col px-5 pb-8;
+  }
+  .screen-with-nav {
+    @apply min-h-dvh flex flex-col pb-[72px];
+  }
+
+  /* Section label */
+  .section-label {
+    @apply text-[11px] font-bold text-ink-30 uppercase tracking-[0.07em] mb-2;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px bg-[rgba(26,25,23,0.08)] my-6;
+  }
+}
+
+─────────────────────────────────────
+PART 4 — FOLDER STRUCTURE
+─────────────────────────────────────
+
+Create the following folder and file structure inside src/. Create every file listed. Leave files empty for now except where content is specified below.
+
+src/
+├── main.jsx
+├── App.jsx
+├── index.css
+├── lib/
+│   ├── supabase.js
+│   └── claude.js
+├── context/
+│   └── UserContext.jsx
+├── hooks/
+│   ├── useAuth.js
+│   └── useDecision.js
+├── components/
+│   ├── ui/
+│   │   ├── Button.jsx
+│   │   ├── Card.jsx
+│   │   ├── Input.jsx
+│   │   ├── Tag.jsx
+│   │   ├── Toast.jsx
+│   │   └── Spinner.jsx
+│   ├── layout/
+│   │   ├── BottomNav.jsx
+│   │   ├── NavBar.jsx
+│   │   └── StatusBar.jsx
+│   └── decision/
+│       ├── DecisionCard.jsx
+│       ├── RecommendationBlock.jsx
+│       ├── AssumptionStrip.jsx
+│       └── TradeoffCard.jsx
+├── screens/
+│   ├── public/
+│   │   ├── LandingScreen.jsx
+│   │   ├── HowItWorksScreen.jsx
+│   │   ├── PricingScreen.jsx
+│   │   └── SharedRecommendationScreen.jsx
+│   ├── auth/
+│   │   ├── SignInScreen.jsx
+│   │   └── EmailVerificationScreen.jsx
+│   ├── decision/
+│   │   ├── IntakeScreen.jsx
+│   │   ├── FollowUpScreen.jsx
+│   │   ├── AssumptionScreen.jsx
+│   │   └── ConversationScreen.jsx
+│   ├── result/
+│   │   ├── RecommendationScreen.jsx
+│   │   ├── SavePromptScreen.jsx
+│   │   ├── ShareScreen.jsx
+│   │   ├── DefenceScreen.jsx
+│   │   └── TradeoffDetailScreen.jsx
+│   ├── app/
+│   │   ├── HomeScreen.jsx
+│   │   ├── HistoryScreen.jsx
+│   │   ├── PastDecisionScreen.jsx
+│   │   └── ContextProfileScreen.jsx
+│   ├── account/
+│   │   ├── AccountScreen.jsx
+│   │   ├── NotificationsScreen.jsx
+│   │   ├── BillingScreen.jsx
+│   │   └── HelpScreen.jsx
+│   └── utility/
+│       ├── ErrorScreen.jsx
+│       ├── EmptyStateScreen.jsx
+│       └── UpgradeScreen.jsx
+└── constants/
+    ├── routes.js
+    └── prompts.js
+
+─────────────────────────────────────
+PART 5 — ROUTING SKELETON
+─────────────────────────────────────
+
+Replace src/App.jsx with exactly this:
+
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ROUTES } from './constants/routes'
+
+// Public screens
+import LandingScreen from './screens/public/LandingScreen'
+import SharedRecommendationScreen from './screens/public/SharedRecommendationScreen'
+
+// Auth screens
+import SignInScreen from './screens/auth/SignInScreen'
+import EmailVerificationScreen from './screens/auth/EmailVerificationScreen'
+
+// Decision screens
+import IntakeScreen from './screens/decision/IntakeScreen'
+import FollowUpScreen from './screens/decision/FollowUpScreen'
+import AssumptionScreen from './screens/decision/AssumptionScreen'
+import ConversationScreen from './screens/decision/ConversationScreen'
+
+// Result screens
+import RecommendationScreen from './screens/result/RecommendationScreen'
+import SavePromptScreen from './screens/result/SavePromptScreen'
+import ShareScreen from './screens/result/ShareScreen'
+import DefenceScreen from './screens/result/DefenceScreen'
+import TradeoffDetailScreen from './screens/result/TradeoffDetailScreen'
+
+// App screens
+import HomeScreen from './screens/app/HomeScreen'
+import HistoryScreen from './screens/app/HistoryScreen'
+import PastDecisionScreen from './screens/app/PastDecisionScreen'
+import ContextProfileScreen from './screens/app/ContextProfileScreen'
+
+// Account screens
+import AccountScreen from './screens/account/AccountScreen'
+import NotificationsScreen from './screens/account/NotificationsScreen'
+import BillingScreen from './screens/account/BillingScreen'
+import HelpScreen from './screens/account/HelpScreen'
+
+// Utility screens
+import ErrorScreen from './screens/utility/ErrorScreen'
+import EmptyStateScreen from './screens/utility/EmptyStateScreen'
+import UpgradeScreen from './screens/utility/UpgradeScreen'
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public */}
+        <Route path={ROUTES.LANDING}              element={<LandingScreen />} />
+        <Route path={ROUTES.SHARED}               element={<SharedRecommendationScreen />} />
+
+        {/* Auth */}
+        <Route path={ROUTES.SIGN_IN}              element={<SignInScreen />} />
+        <Route path={ROUTES.EMAIL_VERIFY}         element={<EmailVerificationScreen />} />
+
+        {/* Decision flow */}
+        <Route path={ROUTES.INTAKE}               element={<IntakeScreen />} />
+        <Route path={ROUTES.FOLLOW_UP}            element={<FollowUpScreen />} />
+        <Route path={ROUTES.ASSUMPTION}           element={<AssumptionScreen />} />
+        <Route path={ROUTES.CONVERSATION}         element={<ConversationScreen />} />
+
+        {/* Result */}
+        <Route path={ROUTES.RECOMMENDATION}       element={<RecommendationScreen />} />
+        <Route path={ROUTES.SAVE}                 element={<SavePromptScreen />} />
+        <Route path={ROUTES.SHARE}                element={<ShareScreen />} />
+        <Route path={ROUTES.DEFENCE}              element={<DefenceScreen />} />
+        <Route path={ROUTES.TRADEOFF}             element={<TradeoffDetailScreen />} />
+
+        {/* Authenticated app */}
+        <Route path={ROUTES.HOME}                 element={<HomeScreen />} />
+        <Route path={ROUTES.HISTORY}              element={<HistoryScreen />} />
+        <Route path={ROUTES.PAST_DECISION}        element={<PastDecisionScreen />} />
+        <Route path={ROUTES.CONTEXT_PROFILE}      element={<ContextProfileScreen />} />
+
+        {/* Account */}
+        <Route path={ROUTES.ACCOUNT}              element={<AccountScreen />} />
+        <Route path={ROUTES.NOTIFICATIONS}        element={<NotificationsScreen />} />
+        <Route path={ROUTES.BILLING}              element={<BillingScreen />} />
+        <Route path={ROUTES.HELP}                 element={<HelpScreen />} />
+
+        {/* Utility */}
+        <Route path={ROUTES.ERROR}                element={<ErrorScreen />} />
+        <Route path={ROUTES.UPGRADE}              element={<UpgradeScreen />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+─────────────────────────────────────
+PART 6 — CONSTANTS
+─────────────────────────────────────
+
+Create src/constants/routes.js with exactly this content:
+
+export const ROUTES = {
+  // Public
+  LANDING:         '/',
+  SHARED:          '/s/:shareId',
+
+  // Auth
+  SIGN_IN:         '/sign-in',
+  EMAIL_VERIFY:    '/verify',
+
+  // Decision flow
+  INTAKE:          '/decide',
+  FOLLOW_UP:       '/decide/follow-up',
+  ASSUMPTION:      '/decide/assumption',
+  CONVERSATION:    '/decide/conversation',
+
+  // Result
+  RECOMMENDATION:  '/recommendation',
+  SAVE:            '/recommendation/save',
+  SHARE:           '/recommendation/share',
+  DEFENCE:         '/recommendation/defence',
+  TRADEOFF:        '/recommendation/tradeoff',
+
+  // Authenticated app
+  HOME:            '/home',
+  HISTORY:         '/history',
+  PAST_DECISION:   '/history/:decisionId',
+  CONTEXT_PROFILE: '/profile',
+
+  // Account
+  ACCOUNT:         '/account',
+  NOTIFICATIONS:   '/account/notifications',
+  BILLING:         '/account/billing',
+  HELP:            '/account/help',
+
+  // Utility
+  ERROR:           '/error',
+  UPGRADE:         '/upgrade',
+}
+
+Create src/constants/prompts.js with exactly this content:
+
+export const SYSTEM_PROMPT = `You are Clarix, an AI personal decision assistant.
+
+Your job is to help users make clear, confident decisions about their finances, career, and life.
+
+RULES YOU MUST FOLLOW:
+1. Always produce ONE specific recommendation. Never a list of equally weighted options.
+2. Anchor every recommendation in the user's specific context — their income, age, goals, constraints.
+3. Use plain language throughout. If you use a financial term, explain it immediately in the same sentence.
+4. Always state the main trade-off the user is accepting with the recommendation.
+5. List every assumption you made on the user's behalf, clearly labelled.
+6. Never recommend a specific product based on commission or sponsorship. You have none.
+7. If you do not have enough context, ask ONE targeted follow-up question. Not a list of questions.
+8. Never hedge with phrases like "it depends" without immediately saying what it depends on and answering for the most likely case.
+
+OUTPUT FORMAT:
+Return a JSON object with this exact structure:
+{
+  "recommendation": "One sentence stating exactly what the user should do.",
+  "summary": "Two to three sentences explaining why this is right for their specific situation.",
+  "reasons": [
+    { "title": "Short reason title", "body": "Plain-language explanation anchored in user context." },
+    { "title": "Short reason title", "body": "Plain-language explanation anchored in user context." },
+    { "title": "Short reason title", "body": "Plain-language explanation anchored in user context." }
+  ],
+  "tradeoff": {
+    "title": "The main thing the user is giving up or accepting.",
+    "body": "Plain-language explanation of this trade-off and what to do about it."
+  },
+  "assumptions": [
+    "Assumption stated as a plain declarative sentence the user can confirm or correct."
+  ],
+  "followUpNeeded": false,
+  "followUpQuestion": null
+}
+
+If you need more context before you can produce a recommendation, set followUpNeeded to true and put your single question in followUpQuestion. Return null for all other fields.
+
+Never return anything outside this JSON structure. No preamble. No explanation. Just the JSON.`
+
+export const buildUserPrompt = (situation, context = {}) => {
+  const contextStr = Object.keys(context).length > 0
+    ? `\n\nPrevious context about this user:\n${JSON.stringify(context, null, 2)}`
+    : ''
+
+  return `The user is trying to make this decision:\n\n${situation}${contextStr}`
+}
+
+─────────────────────────────────────
+PART 7 — SUPABASE CLIENT
+─────────────────────────────────────
+
+Create src/lib/supabase.js with exactly this content:
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase environment variables. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.'
+  )
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+})
+
+─────────────────────────────────────
+PART 8 — USER CONTEXT
+─────────────────────────────────────
+
+Create src/context/UserContext.jsx with exactly this content:
+
+import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+
+const UserContext = createContext(null)
+
+export function UserProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session)
+        setUser(session?.user ?? null)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+  }
+
+  return (
+    <UserContext.Provider value={{ user, session, loading, signOut }}>
+      {children}
+    </UserContext.Provider>
+  )
+}
+
+export const useUser = () => {
+  const context = useContext(UserContext)
+  if (!context) throw new Error('useUser must be used within UserProvider')
+  return context
+}
+
+─────────────────────────────────────
+PART 9 — PLACEHOLDER SCREENS
+─────────────────────────────────────
+
+For every screen file listed in Part 4, create it with this placeholder content. Replace SCREEN_NAME with the actual screen name from the filename:
+
+import React from 'react'
+
+export default function SCREEN_NAME() {
+  return (
+    <div className="screen items-center justify-center">
+      <p className="text-body-sm text-ink-30">SCREEN_NAME — coming soon</p>
+    </div>
+  )
+}
+
+─────────────────────────────────────
+PART 10 — ENVIRONMENT FILE
+─────────────────────────────────────
+
+Create a .env file in the project root with this content:
+
+VITE_SUPABASE_URL=your_supabase_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+VITE_CLAUDE_API_KEY=your_claude_api_key_here
+
+Create a .env.example file with the same content so the keys are documented.
+
+Add .env to .gitignore if it is not already there.
+
+─────────────────────────────────────
+PART 11 — UPDATE MAIN.JSX
+─────────────────────────────────────
+
+Replace src/main.jsx with exactly this:
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { UserProvider } from './context/UserContext'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <UserProvider>
+      <App />
+    </UserProvider>
+  </React.StrictMode>
+)
+
+─────────────────────────────────────
+PART 12 — VERIFY THE BUILD
+─────────────────────────────────────
+
+After creating all files, run:
+npm run dev
+
+The app should start without errors. Every route should render a placeholder screen with its name displayed. There should be no import errors and no missing module errors.
+
+If there are errors, fix them before stopping. Common issues to check:
+- Every screen file in App.jsx must exist in the screens/ folder
+- The UserContext import in main.jsx must match the export in UserContext.jsx
+- The .env file must exist even with placeholder values or the supabase.js file will throw

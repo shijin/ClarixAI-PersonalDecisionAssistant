@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Brand colors */
+  --color-brand-purple: #534AB7;
+  --color-brand-purple-dark: #3C3489;
+  --color-brand-purple-mid: #7F77DD;
+  --color-brand-purple-light: #EEEDFE;
+  --color-brand-teal: #0F6E56;
+  --color-brand-teal-mid: #1D9E75;
+  --color-brand-teal-light: #E1F5EE;
+
+  /* Ink colors */
+  --color-ink-100: #1A1917;
+  --color-ink-80: #3D3D3A;
+  --color-ink-50: #73726C;
+  --color-ink-30: #9C9A92;
+
+  /* Surface colors */
+  --color-surface-0: #FFFFFF;
+  --color-surface-1: #F7F6F3;
+  --color-surface-2: #EFEDE8;
+  --color-surface-3: #E5E3DC;
+
+  /* Semantic colors */
+  --color-semantic-success: #1D9E75;
+  --color-semantic-success-bg: #E1F5EE;
+  --color-semantic-success-dark: #085041;
+  --color-semantic-warning: #BA7517;
+  --color-semantic-warning-bg: #FAEEDA;
+  --color-semantic-warning-dark: #633806;
+  --color-semantic-error: #A32D2D;
+  --color-semantic-error-bg: #FCEBEB;
+  --color-semantic-error-dark: #501313;
+  --color-semantic-info: #185FA5;
+  --color-semantic-info-bg: #E6F1FB;
+  --color-semantic-info-dark: #042C53;
+
+  /* Font family */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* Font sizes */
+  --text-display: 28px;
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 800;
+  --text-h1: 22px;
+  --text-h1--line-height: 1.3;
+  --text-h1--font-weight: 700;
+  --text-h2: 18px;
+  --text-h2--line-height: 1.35;
+  --text-h2--font-weight: 600;
+  --text-h3: 15px;
+  --text-h3--line-height: 1.4;
+  --text-h3--font-weight: 600;
+  --text-body-lg: 15px;
+  --text-body-lg--line-height: 1.65;
+  --text-body-lg--font-weight: 400;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 1.6;
+  --text-body-sm--font-weight: 400;
+  --text-caption: 11px;
+  --text-caption--line-height: 1.5;
+  --text-caption--font-weight: 500;
+  --text-label: 12px;
+  --text-label--line-height: 1;
+  --text-label--font-weight: 600;
+
+  /* Border radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Spacing */
+  --spacing-screen-x: 20px;
+  --spacing-card-x: 20px;
+  --spacing-card-y: 16px;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-surface-1 text-ink-100 font-sans;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    position: relative;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 h-12 px-6 bg-brand-purple text-white text-[15px] font-bold rounded-md border-none cursor-pointer w-full transition-colors duration-150;
+  }
+  .btn-primary:hover  { @apply bg-brand-purple-dark; }
+  .btn-primary:active { @apply scale-[0.98]; }
+  .btn-primary:disabled {
+    @apply bg-surface-3 text-ink-30 cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 h-12 px-6 bg-transparent text-brand-purple text-[15px] font-bold rounded-md border-[1.5px] border-brand-purple cursor-pointer w-full transition-all duration-150;
+  }
+  .btn-secondary:hover  { @apply bg-brand-purple-light; }
+  .btn-secondary:active { @apply scale-[0.98]; }
+  .btn-secondary:disabled {
+    @apply border-ink-30 text-ink-30 cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply flex items-center justify-center gap-2 h-11 px-5 bg-transparent text-ink-80 text-[14px] font-medium rounded-sm border border-[rgba(26,25,23,0.12)] cursor-pointer w-full transition-all duration-150;
+  }
+  .btn-ghost:hover  { @apply bg-surface-2; }
+  .btn-ghost:active { @apply scale-[0.98]; }
+
+  /* Cards */
+  .card {
+    @apply bg-surface-0 border border-[rgba(26,25,23,0.08)] rounded-md p-[16px_20px];
+  }
+  .card-elevated {
+    @apply bg-surface-0 border border-[rgba(26,25,23,0.14)] rounded-md p-[16px_20px];
+  }
+  .card-tinted {
+    @apply bg-brand-purple-light border border-[rgba(83,74,183,0.15)] rounded-md p-[16px_20px];
+  }
+  .card-teal {
+    @apply bg-brand-teal-light border border-[rgba(15,110,86,0.2)] rounded-md p-[16px_20px];
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply h-12 px-[14px] text-[15px] text-ink-100 bg-surface-0 border-[1.5px] border-[rgba(26,25,23,0.14)] rounded-sm w-full transition-colors duration-150 outline-none font-sans;
+  }
+  .input-field:hover   { @apply border-[rgba(26,25,23,0.22)]; }
+  .input-field:focus   { @apply border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.12)]; }
+  .input-field.error   { @apply border-semantic-error; }
+  .input-field:disabled {
+    @apply bg-surface-2 text-ink-30 cursor-not-allowed;
+  }
+
+  .textarea-field {
+    @apply px-[14px] py-[12px] text-[15px] text-ink-100 bg-surface-0 border-[1.5px] border-[rgba(26,25,23,0.14)] rounded-md w-full transition-colors duration-150 outline-none font-sans resize-none leading-[1.65] min-h-[88px];
+  }
+  .textarea-field:hover  { @apply border-[rgba(26,25,23,0.22)]; }
+  .textarea-field:focus  { @apply border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.12)]; }
+
+  /* Tags */
+  .tag {
+    @apply inline-flex items-center h-7 px-[10px] text-[12px] font-semibold rounded-pill border-[1.5px];
+  }
+  .tag-purple  { @apply bg-brand-purple-light text-brand-purple-dark border-[rgba(83,74,183,0.25)]; }
+  .tag-teal    { @apply bg-brand-teal-light text-brand-teal border-[rgba(15,110,86,0.25)]; }
+  .tag-neutral { @apply bg-surface-2 text-ink-80 border-[rgba(26,25,23,0.14)]; }
+  .tag-success { @apply bg-semantic-success-bg text-semantic-success-dark border-[rgba(29,158,117,0.25)]; }
+  .tag-warning { @apply bg-semantic-warning-bg text-semantic-warning-dark border-[rgba(186,117,23,0.25)]; }
+  .tag-error   { @apply bg-semantic-error-bg text-semantic-error-dark border-[rgba(163,45,45,0.2)]; }
+
+  /* Screen wrapper */
+  .screen {
+    @apply min-h-dvh flex flex-col px-5 pb-8;
+  }
+  .screen-with-nav {
+    @apply min-h-dvh flex flex-col pb-[72px];
+  }
+
+  /* Section label */
+  .section-label {
+    @apply text-[11px] font-bold text-ink-30 uppercase tracking-[0.07em] mb-2;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px bg-[rgba(26,25,23,0.08)] my-6;
+  }
+}
