@@ -119,7 +119,223 @@ function IconChevronDown() {
   );
 }
 
-function LoadingState({ situation }) {
+function IconCheck() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      fill="none"
+      stroke="#0F6E56"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      viewBox="0 0 24 24"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────
+// Quick suggestion helper
+// Returns relevant correction options
+// based on the assumption text
+// ─────────────────────────────────────
+
+function getQuickSuggestions(assumption) {
+  const lower = assumption.toLowerCase();
+  if (lower.includes("smok") || lower.includes("tobacco")) {
+    return ["I am a smoker", "I use tobacco occasionally"];
+  }
+  if (lower.includes("insurance") || lower.includes("coverage")) {
+    return ["I have employer insurance", "I have an existing policy"];
+  }
+  if (lower.includes("expense") || lower.includes("spending")) {
+    return ["My expenses are higher", "My expenses are lower"];
+  }
+  if (
+    lower.includes("invest") ||
+    lower.includes("sip") ||
+    lower.includes("maintain")
+  ) {
+    return ["I may need to pause investing", "My income is irregular"];
+  }
+  if (lower.includes("dependent") || lower.includes("family")) {
+    return ["I have dependents", "My family situation is different"];
+  }
+  if (
+    lower.includes("loan") ||
+    lower.includes("debt") ||
+    lower.includes("emi")
+  ) {
+    return ["I have an existing loan", "I have EMIs to pay"];
+  }
+  if (lower.includes("salary") || lower.includes("income")) {
+    return ["My income is irregular", "I have other income sources"];
+  }
+  return ["This is incorrect", "My situation is different"];
+}
+
+// ─────────────────────────────────────
+// Assumption row component
+// Handles the inline correction flow
+// for a single assumption
+// ─────────────────────────────────────
+
+function AssumptionRow({ assumption, index, onCorrect }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [correction, setCorrection] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const isReady = correction.trim().length > 2;
+
+  const handleSubmit = () => {
+    if (!isReady) return;
+    setSubmitted(true);
+    setIsEditing(false);
+    onCorrect(correction.trim());
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setCorrection("");
+  };
+
+  return (
+    <div
+      className={`flex flex-col gap-2
+                  ${
+                    index > 0
+                      ? "pt-3 border-t border-[rgba(26,25,23,0.06)]"
+                      : ""
+                  }`}
+    >
+      {/* Assumption text and action button */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1 flex-1">
+          {/* Label changes based on state */}
+          <span
+            className={`text-[9px] font-bold uppercase tracking-[0.05em]
+                            ${submitted ? "text-brand-teal-mid" : "text-ink-30"}`}
+          >
+            {submitted ? "Corrected" : "Assumed"}
+          </span>
+
+          {/* Original assumption — struck through if corrected */}
+          <p
+            className={`text-body-sm leading-relaxed transition-all duration-200
+                         ${
+                           submitted
+                             ? "line-through text-ink-30"
+                             : "text-ink-80"
+                         }`}
+          >
+            {assumption}
+          </p>
+
+          {/* Show the correction the user provided */}
+          {submitted && (
+            <div className="flex items-center gap-2 mt-1">
+              <div
+                className="w-4 h-4 bg-brand-teal-light rounded-full
+                              flex items-center justify-center flex-shrink-0"
+              >
+                <IconCheck />
+              </div>
+              <p className="text-body-sm text-brand-teal font-medium">
+                {correction}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Correct / Cancel button */}
+        {!submitted && (
+          <button
+            onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
+            className={`text-[12px] font-bold flex-shrink-0 mt-1
+                        transition-colors duration-150
+                        ${isEditing ? "text-ink-30" : "text-brand-purple"}`}
+          >
+            {isEditing ? "Cancel" : "Correct"}
+          </button>
+        )}
+      </div>
+
+      {/* Inline correction input — shown when editing */}
+      {isEditing && !submitted && (
+        <div className="flex flex-col gap-2 pt-1">
+          {/* Text input area */}
+          <div
+            className={`bg-surface-1 rounded-xl p-3 border-[1.5px]
+                           transition-all duration-150
+                           ${
+                             correction.length > 0
+                               ? "border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.08)]"
+                               : "border-[rgba(26,25,23,0.1)]"
+                           }`}
+          >
+            <p
+              className="text-[10px] font-bold text-ink-30 uppercase
+                          tracking-[0.05em] mb-2"
+            >
+              What should we know instead?
+            </p>
+            <textarea
+              value={correction}
+              onChange={(e) => setCorrection(e.target.value)}
+              placeholder="e.g. My actual monthly expenses are Rs 22,000..."
+              rows={2}
+              autoFocus
+              className="w-full bg-transparent text-[13px] text-ink-100
+                         placeholder-ink-30 leading-relaxed resize-none
+                         outline-none border-none font-sans"
+            />
+          </div>
+
+          {/* Quick suggestion pills */}
+          <div className="flex gap-2 flex-wrap">
+            {getQuickSuggestions(assumption).map((s, si) => (
+              <button
+                key={si}
+                onClick={() => setCorrection(s)}
+                className={`h-7 px-3 rounded-pill text-[11px] font-semibold
+                            border transition-all duration-150
+                            ${
+                              correction === s
+                                ? "bg-brand-purple text-white border-brand-purple"
+                                : "bg-surface-0 text-ink-50 border-[rgba(26,25,23,0.1)]"
+                            }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {/* Update button */}
+          <button
+            onClick={handleSubmit}
+            disabled={!isReady}
+            className={`h-9 rounded-lg text-[13px] font-bold
+                        transition-colors duration-150
+                        ${
+                          isReady
+                            ? "bg-brand-purple text-white cursor-pointer"
+                            : "bg-surface-3 text-ink-30 cursor-not-allowed"
+                        }`}
+          >
+            Update recommendation
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────
+// Loading state
+// ─────────────────────────────────────
+
+function LoadingState({ situation, isUpdating }) {
   const [dots, setDots] = useState(".");
 
   useEffect(() => {
@@ -132,6 +348,7 @@ function LoadingState({ situation }) {
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
+
       <div className="flex items-center justify-between mb-9">
         <div
           className="w-9 h-9 bg-surface-0 border border-[rgba(26,25,23,0.1)]
@@ -140,11 +357,14 @@ function LoadingState({ situation }) {
           <IconBack />
         </div>
         <span className="text-body-sm font-semibold text-ink-30">
-          Working on it{dots}
+          {isUpdating
+            ? "Updating recommendation" + dots
+            : "Working on it" + dots}
         </span>
         <div className="w-9" />
       </div>
 
+      {/* Situation recap card */}
       <div className="card mb-8">
         <p className="section-label mb-2">Your situation</p>
         <p className="text-body-sm text-ink-80 leading-relaxed line-clamp-3">
@@ -152,6 +372,7 @@ function LoadingState({ situation }) {
         </p>
       </div>
 
+      {/* Skeleton blocks */}
       <div className="mb-4">
         <div className="h-4 w-24 bg-surface-2 rounded-xs mb-4 animate-pulse" />
         <div className="h-8 w-full bg-surface-2 rounded-xs mb-2 animate-pulse" />
@@ -177,17 +398,24 @@ function LoadingState({ situation }) {
                         rounded-full animate-spin"
         />
         <span className="text-caption text-ink-30">
-          Analysing your situation — usually under 10 seconds
+          {isUpdating
+            ? "Recalculating based on your correction..."
+            : "Analysing your situation — usually under 10 seconds"}
         </span>
       </div>
     </div>
   );
 }
 
+// ─────────────────────────────────────
+// Error state
+// ─────────────────────────────────────
+
 function ErrorState({ onRetry, onBack }) {
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
+
       <div className="flex items-center justify-between mb-9">
         <button
           onClick={onBack}
@@ -265,6 +493,12 @@ function ErrorState({ onRetry, onBack }) {
   );
 }
 
+// ─────────────────────────────────────
+// Follow-up needed state
+// Claude needs one more answer before
+// it can produce a recommendation
+// ─────────────────────────────────────
+
 function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
   const [answer, setAnswer] = useState("");
   const isReady = answer.trim().length > 2;
@@ -272,6 +506,7 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
+
       <div className="flex items-center justify-between mb-9">
         <button
           onClick={onBack}
@@ -286,6 +521,7 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         <div className="w-9" />
       </div>
 
+      {/* Situation recap */}
       <div className="card mb-6">
         <p className="section-label mb-2">Your situation</p>
         <p className="text-body-sm text-ink-80 leading-relaxed line-clamp-2">
@@ -293,6 +529,7 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         </p>
       </div>
 
+      {/* Follow-up question */}
       <div
         className="bg-brand-purple-light border border-[rgba(83,74,183,0.2)]
                       rounded-2xl p-4 mb-6"
@@ -316,6 +553,7 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         </p>
       </div>
 
+      {/* Answer input */}
       <div
         className={`bg-surface-0 rounded-2xl p-4 mb-4 border-[1.5px]
                        transition-all duration-150
@@ -337,6 +575,7 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         />
       </div>
 
+      {/* Quick answer pills */}
       <div className="flex gap-2 flex-wrap mb-8">
         {["Yes", "No", "Not sure"].map((opt) => (
           <button
@@ -368,12 +607,46 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
   );
 }
 
+// ─────────────────────────────────────
+// Update banner
+// Shows briefly after a correction
+// is applied and recommendation updates
+// ─────────────────────────────────────
+
+function UpdateBanner({ visible }) {
+  if (!visible) return null;
+
+  return (
+    <div
+      className="mx-5 mb-4 flex items-center gap-3 px-4 py-3
+                    bg-brand-teal-light border border-[rgba(15,110,86,0.2)]
+                    rounded-xl"
+    >
+      <div
+        className="w-5 h-5 bg-brand-teal-mid rounded-full
+                      flex items-center justify-center flex-shrink-0"
+      >
+        <IconCheck />
+      </div>
+      <p className="text-body-sm text-brand-teal font-medium">
+        Recommendation updated based on your correction
+      </p>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────
+// Main recommendation result screen
+// ─────────────────────────────────────
+
 function RecommendationResult({
   data,
   situation,
   onFollowUp,
   onSave,
   onShare,
+  onCorrectAssumption,
+  wasUpdated,
 }) {
   const scrollRef = useRef(null);
 
@@ -381,6 +654,7 @@ function RecommendationResult({
     <div className="min-h-dvh bg-surface-1 flex flex-col">
       <div className="h-12 bg-surface-0" />
 
+      {/* Nav bar */}
       <div
         className="flex items-center justify-between px-5 h-14
                       bg-surface-0 border-b border-[rgba(26,25,23,0.07)]"
@@ -416,11 +690,17 @@ function RecommendationResult({
         </div>
       </div>
 
+      {/* Scrollable content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto pb-32">
+        {/* Update banner — shown after assumption correction */}
+        <UpdateBanner visible={wasUpdated} />
+
+        {/* ── Answer zone — white, above the fold ── */}
         <div
           className="bg-surface-0 px-5 pt-7 pb-8
                         border-b border-[rgba(26,25,23,0.07)]"
         >
+          {/* Context tag */}
           <div
             className="inline-flex items-center gap-[6px] bg-surface-1
                           border border-[rgba(26,25,23,0.08)] rounded-pill
@@ -432,8 +712,10 @@ function RecommendationResult({
             </span>
           </div>
 
+          {/* Section label */}
           <p className="section-label mb-3">Your recommendation</p>
 
+          {/* The recommendation — large and confident */}
           <h1
             className="text-[24px] font-extrabold text-ink-100
                          leading-snug tracking-tight mb-5"
@@ -441,10 +723,12 @@ function RecommendationResult({
             {data.recommendation}
           </h1>
 
+          {/* Summary */}
           <p className="text-body-lg text-ink-50 leading-relaxed mb-6">
             {data.summary}
           </p>
 
+          {/* Scroll hint */}
           <div className="flex items-center gap-2">
             <IconChevronDown />
             <span className="text-caption text-ink-30">
@@ -453,7 +737,9 @@ function RecommendationResult({
           </div>
         </div>
 
-        <div className="px-5 pt-6 flex flex-col gap-4">
+        {/* ── Reasoning zone ── */}
+        <div className="px-5 pt-6 flex flex-col gap-5">
+          {/* Why this works for you */}
           {data.reasons && data.reasons.length > 0 && (
             <div>
               <p className="section-label mb-3">Why this works for you</p>
@@ -478,6 +764,7 @@ function RecommendationResult({
             </div>
           )}
 
+          {/* Trade-off */}
           {data.tradeoff && data.tradeoff.title && (
             <div>
               <p className="section-label mb-3">The trade-off to know</p>
@@ -494,10 +781,16 @@ function RecommendationResult({
                   <IconWarning />
                 </div>
                 <div>
-                  <p className="text-[13px] font-bold text-semantic-warning-dark mb-1">
+                  <p
+                    className="text-[13px] font-bold
+                                text-semantic-warning-dark mb-1"
+                  >
                     {data.tradeoff.title}
                   </p>
-                  <p className="text-body-sm text-semantic-warning leading-relaxed">
+                  <p
+                    className="text-body-sm text-semantic-warning
+                                leading-relaxed"
+                  >
                     {data.tradeoff.body}
                   </p>
                 </div>
@@ -505,43 +798,26 @@ function RecommendationResult({
             </div>
           )}
 
+          {/* Assumptions — with inline correction flow */}
           {data.assumptions && data.assumptions.length > 0 && (
             <div>
               <p className="section-label mb-3">Assumptions we made</p>
               <div className="card flex flex-col gap-3">
                 {data.assumptions.map((assumption, i) => (
-                  <div
+                  <AssumptionRow
                     key={i}
-                    className={`flex items-start justify-between gap-3
-                                ${
-                                  i > 0
-                                    ? "pt-3 border-t border-[rgba(26,25,23,0.06)]"
-                                    : ""
-                                }`}
-                  >
-                    <div className="flex flex-col gap-1 flex-1">
-                      <span
-                        className="text-[9px] font-bold text-ink-30
-                                       uppercase tracking-[0.05em]"
-                      >
-                        Assumed
-                      </span>
-                      <p className="text-body-sm text-ink-80 leading-relaxed">
-                        {assumption}
-                      </p>
-                    </div>
-                    <button
-                      className="text-[12px] font-bold text-brand-purple
-                                       flex-shrink-0 mt-1"
-                    >
-                      Correct
-                    </button>
-                  </div>
+                    assumption={assumption}
+                    index={i}
+                    onCorrect={(correctedValue) =>
+                      onCorrectAssumption(assumption, correctedValue)
+                    }
+                  />
                 ))}
               </div>
             </div>
           )}
 
+          {/* Original situation recap */}
           <div>
             <p className="section-label mb-3">Your situation</p>
             <div className="card">
@@ -555,6 +831,7 @@ function RecommendationResult({
         </div>
       </div>
 
+      {/* ── Sticky action bar ── */}
       <div
         className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full
                       max-w-[480px] px-5 py-4 bg-surface-1
@@ -589,6 +866,11 @@ function RecommendationResult({
   );
 }
 
+// ─────────────────────────────────────
+// Root export
+// Orchestrates all screen states
+// ─────────────────────────────────────
+
 export default function RecommendationScreen() {
   const navigate = useNavigate();
 
@@ -597,6 +879,8 @@ export default function RecommendationScreen() {
   const [error, setError] = useState(null);
   const [situation, setSituation] = useState("");
   const [followUpQ, setFollowUpQ] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [wasUpdated, setWasUpdated] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("clarix_situation");
@@ -605,21 +889,32 @@ export default function RecommendationScreen() {
       return;
     }
     setSituation(stored);
-    fetchRecommendation(stored);
+    fetchRecommendation(stored, false);
   }, []);
 
-  const fetchRecommendation = async (sit) => {
+  const fetchRecommendation = async (sit, updating = false) => {
     setStatus("loading");
+    setIsUpdating(updating);
     setError(null);
+
     try {
       const result = await getRecommendation(sit);
+
       if (result.followUpNeeded && result.followUpQuestion) {
         setFollowUpQ(result.followUpQuestion);
         setStatus("followup");
         return;
       }
+
       setData(result);
       setStatus("success");
+
+      if (updating) {
+        setWasUpdated(true);
+        // Hide the update banner after 4 seconds
+        setTimeout(() => setWasUpdated(false), 4000);
+      }
+
       sessionStorage.setItem("clarix_recommendation", JSON.stringify(result));
     } catch (err) {
       setError(err.message);
@@ -628,23 +923,46 @@ export default function RecommendationScreen() {
   };
 
   const handleFollowUpAnswer = async (answer) => {
-    const enriched = `${situation}\n\nAdditional context: ${followUpQ}\nAnswer: ${answer}`;
+    const enriched =
+      situation +
+      "\n\nAdditional context: " +
+      followUpQ +
+      "\nAnswer: " +
+      answer;
     setSituation(enriched);
     sessionStorage.setItem("clarix_situation", enriched);
     setFollowUpQ(null);
-    await fetchRecommendation(enriched);
+    await fetchRecommendation(enriched, false);
   };
 
-  const handleRetry = () => fetchRecommendation(situation);
+  const handleCorrectAssumption = async (originalAssumption, correction) => {
+    const enriched =
+      situation +
+      '\n\nCorrection to an assumption: We assumed "' +
+      originalAssumption +
+      '" but the user has corrected this: "' +
+      correction +
+      '". Please update your recommendation to reflect this correction.';
+    setSituation(enriched);
+    sessionStorage.setItem("clarix_situation", enriched);
+    await fetchRecommendation(enriched, true);
+  };
+
+  const handleRetry = () => fetchRecommendation(situation, false);
   const handleBack = () => navigate(ROUTES.INTAKE);
   const handleFollowUp = () => navigate(ROUTES.CONVERSATION);
   const handleSave = () => navigate(ROUTES.SAVE);
   const handleShare = () => navigate(ROUTES.SHARE);
 
-  if (status === "loading") return <LoadingState situation={situation} />;
-  if (status === "error")
+  if (status === "loading") {
+    return <LoadingState situation={situation} isUpdating={isUpdating} />;
+  }
+
+  if (status === "error") {
     return <ErrorState onRetry={handleRetry} onBack={handleBack} />;
-  if (status === "followup")
+  }
+
+  if (status === "followup") {
     return (
       <FollowUpNeeded
         question={followUpQ}
@@ -653,7 +971,9 @@ export default function RecommendationScreen() {
         onBack={handleBack}
       />
     );
-  if (status === "success" && data)
+  }
+
+  if (status === "success" && data) {
     return (
       <RecommendationResult
         data={data}
@@ -661,7 +981,11 @@ export default function RecommendationScreen() {
         onFollowUp={handleFollowUp}
         onSave={handleSave}
         onShare={handleShare}
+        onCorrectAssumption={handleCorrectAssumption}
+        wasUpdated={wasUpdated}
       />
     );
+  }
+
   return null;
 }
