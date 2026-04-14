@@ -1,0 +1,355 @@
+Build two complete screens for the Clarix app using the existing 
+Tailwind design system and folder structure.
+
+Do not change any existing files except the two screen files 
+specified below. Do not modify App.jsx, routes.js, index.css, 
+or tailwind.config.js.
+
+─────────────────────────────────────
+SCREEN 1 — Landing page
+File: src/screens/public/LandingScreen.jsx
+─────────────────────────────────────
+
+Replace the placeholder content with this complete component:
+
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '../../constants/routes'
+
+export default function LandingScreen() {
+  const navigate = useNavigate()
+
+  const scenarios = [
+    { label: 'Which insurance plan is right for me at 27?', time: '~3 min', color: 'bg-brand-purple' },
+    { label: 'New job offer vs staying for ESOPs?',          time: '~5 min', color: 'bg-brand-teal-mid' },
+    { label: 'How should I invest my first Rs 50,000?',      time: '~4 min', color: 'bg-ink-30' },
+  ]
+
+  return (
+    <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
+
+      {/* Status bar spacer */}
+      <div className="h-12" />
+
+      {/* Wordmark */}
+      <div className="flex items-center gap-2 mb-11">
+        <div className="w-7 h-7 bg-brand-purple rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg width="16" height="16" fill="none" stroke="white"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <span className="text-[16px] font-bold text-ink-100 tracking-tight">
+          Clarix
+        </span>
+      </div>
+
+      {/* Hero */}
+      <div className="mb-7">
+        <h1 className="text-[36px] font-extrabold text-ink-100 leading-[1.1]
+                       tracking-tight mb-4">
+          Stop researching.<br />
+          <span className="text-brand-purple">Start deciding.</span>
+        </h1>
+        <p className="text-body-lg text-ink-50 leading-relaxed">
+          Describe your situation once. Get one clear recommendation
+          built around your income, your goals, your life.
+        </p>
+      </div>
+
+      {/* Divider */}
+      <div className="divider" />
+
+      {/* Scenario list */}
+      <div className="flex flex-col mb-7">
+        {scenarios.map((s, i) => (
+          <div
+            key={i}
+            className="flex items-center justify-between gap-3 py-[14px]
+                       border-b border-[rgba(26,25,23,0.06)] last:border-b-0
+                       cursor-pointer"
+            onClick={() => navigate(ROUTES.INTAKE)}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-2 h-2 rounded-full ${s.color} mt-[6px] flex-shrink-0`} />
+              <span className="text-[14px] font-medium text-ink-80 leading-snug">
+                {s.label}
+              </span>
+            </div>
+            <span className="text-caption text-ink-30 whitespace-nowrap flex-shrink-0">
+              {s.time}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Trust block */}
+      <div className="card flex items-start gap-3 mb-7">
+        <div className="w-8 h-8 bg-brand-teal-light rounded-lg flex items-center
+                        justify-center flex-shrink-0 mt-[2px]">
+          <svg width="16" height="16" fill="none" stroke="#0F6E56"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <p className="text-body-sm text-ink-50 leading-relaxed">
+          <span className="font-semibold text-ink-100">
+            No commissions. No ads. Ever.
+          </span>{' '}
+          Clarix earns only from your subscription — so the recommendation
+          is always in your interest, not ours.
+        </p>
+      </div>
+
+      {/* CTAs */}
+      <div className="flex flex-col gap-3 mt-auto">
+        <button
+          className="btn-primary"
+          onClick={() => navigate(ROUTES.INTAKE)}
+        >
+          <svg width="16" height="16" fill="none" stroke="white"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Try it free — no account needed
+        </button>
+        <button
+          className="btn-ghost"
+          onClick={() => navigate(ROUTES.SIGN_IN)}
+        >
+          Sign in to existing account
+        </button>
+      </div>
+
+    </div>
+  )
+}
+
+
+─────────────────────────────────────
+SCREEN 2 — Decision intake
+File: src/screens/decision/IntakeScreen.jsx
+─────────────────────────────────────
+
+Replace the placeholder content with this complete component:
+
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '../../constants/routes'
+
+const STARTERS = [
+  'Which insurance plan is right for me?',
+  'Should I take the new job offer?',
+  'How should I invest my savings?',
+  'Should I rent or buy right now?',
+  'How do I prioritise my financial goals?',
+]
+
+export default function IntakeScreen() {
+  const navigate  = useNavigate()
+  const [text, setText]       = useState('')
+  const [focused, setFocused] = useState(false)
+  const textareaRef = useRef(null)
+  const MAX = 500
+
+  useEffect(() => {
+    textareaRef.current?.focus()
+  }, [])
+
+  const handleSubmit = () => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    // Store situation in sessionStorage so the next screen can read it
+    sessionStorage.setItem('clarix_situation', trimmed)
+    navigate(ROUTES.RECOMMENDATION)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSubmit()
+    }
+  }
+
+  const handleStarter = (s) => {
+    setText(s)
+    textareaRef.current?.focus()
+  }
+
+  const remaining = MAX - text.length
+  const isReady   = text.trim().length > 10
+
+  return (
+    <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
+
+      {/* Status bar spacer */}
+      <div className="h-12" />
+
+      {/* Nav bar */}
+      <div className="flex items-center justify-between mb-9">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 bg-surface-0 border border-[rgba(26,25,23,0.1)]
+                     rounded-[10px] flex items-center justify-center"
+          aria-label="Go back"
+        >
+          <svg width="18" height="18" fill="none" stroke="#1A1917"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span className="text-body-sm font-semibold text-ink-30">
+          New decision
+        </span>
+        <div className="w-9" />
+      </div>
+
+      {/* Heading */}
+      <h1 className="text-[26px] font-extrabold text-ink-100 leading-snug
+                     tracking-tight mb-2">
+        What are you trying to decide?
+      </h1>
+      <p className="text-body-sm text-ink-50 leading-relaxed mb-8">
+        Describe it in your own words. The more specific you are,
+        the more useful the answer.
+      </p>
+
+      {/* Input area */}
+      <div
+        className={`bg-surface-0 rounded-2xl p-4 mb-3 transition-all duration-150
+                    ${focused
+                      ? 'border-[1.5px] border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.1)]'
+                      : 'border-[1.5px] border-[rgba(26,25,23,0.12)]'
+                    }`}
+      >
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={(e) => setText(e.target.value.slice(0, MAX))}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={handleKeyDown}
+          placeholder="e.g. I need to buy term insurance. I am 27, earn Rs 68,000 a month in Pune, no dependents. Not sure which plan to go with or how much cover I need."
+          rows={5}
+          className="w-full bg-transparent text-[15px] text-ink-100
+                     placeholder-ink-30 leading-relaxed resize-none
+                     outline-none border-none font-sans"
+        />
+        <div className="flex items-center justify-between mt-3">
+          <span className={`text-caption ${remaining < 50 ? 'text-semantic-warning' : 'text-ink-30'}`}>
+            {text.length} / {MAX}
+          </span>
+          <button
+            onClick={handleSubmit}
+            disabled={!isReady}
+            className={`w-10 h-10 rounded-[10px] flex items-center justify-center
+                        transition-colors duration-150
+                        ${isReady
+                          ? 'bg-brand-purple cursor-pointer'
+                          : 'bg-surface-3 cursor-not-allowed'
+                        }`}
+            aria-label="Submit"
+          >
+            <svg width="16" height="16" fill="none"
+              stroke={isReady ? 'white' : '#9C9A92'}
+              strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+              viewBox="0 0 24 24">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Hint */}
+      <div className="flex items-center gap-2 mb-8">
+        <div className="w-1 h-1 rounded-full bg-ink-30" />
+        <span className="text-caption text-ink-30">
+          No sign-up needed to get your recommendation
+        </span>
+      </div>
+
+      {/* Starter suggestions */}
+      <p className="section-label mb-3">Common decisions</p>
+      <div className="flex flex-col">
+        {STARTERS.map((s, i) => (
+          <button
+            key={i}
+            onClick={() => handleStarter(s)}
+            className="flex items-center justify-between gap-3 py-[13px]
+                       border-b border-[rgba(26,25,23,0.06)] last:border-b-0
+                       text-left group"
+          >
+            <span className="text-[14px] font-medium text-ink-80
+                             group-hover:text-ink-100 transition-colors leading-snug">
+              {s}
+            </span>
+            <div className="w-6 h-6 border border-[rgba(26,25,23,0.1)] rounded-[7px]
+                            flex items-center justify-center flex-shrink-0
+                            group-hover:border-[rgba(26,25,23,0.2)] transition-colors">
+              <svg width="12" height="12" fill="none" stroke="#9C9A92"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Privacy note */}
+      <div className="flex items-start gap-3 mt-auto pt-8">
+        <svg width="14" height="14" fill="none" stroke="#1D9E75"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          viewBox="0 0 24 24" className="flex-shrink-0 mt-[2px]">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <p className="text-caption text-ink-30 leading-relaxed">
+          <span className="font-semibold text-ink-100">
+            Your context stays private.
+          </span>{' '}
+          We never sell or share what you tell us. No ads. No commissions.
+        </p>
+      </div>
+
+    </div>
+  )
+}
+
+
+─────────────────────────────────────
+VERIFICATION
+─────────────────────────────────────
+
+After saving both files, verify the following:
+
+1. The app reloads without any errors in the console.
+
+2. The root route "/" shows the Landing page with:
+   - Clarix wordmark at the top
+   - Hero heading "Stop researching. Start deciding."
+   - Three scenario rows with colored dots
+   - A trust card with the shield icon
+   - Two CTA buttons at the bottom
+
+3. Clicking "Try it free" or any scenario row navigates
+   to "/decide" and shows the intake screen with:
+   - Back button in the nav bar
+   - Large heading "What are you trying to decide?"
+   - Textarea with placeholder text
+   - Send button (disabled until 10+ characters are typed)
+   - Five starter suggestion rows
+   - Privacy note at the bottom
+
+4. Typing a starter suggestion by clicking a row fills
+   the textarea and enables the send button.
+
+5. Pressing the send button navigates to "/recommendation"
+   which currently shows the placeholder screen.
+   This is correct — we build that screen in Step 4.
+
+6. The back button on the intake screen returns to landing.
+
+Report any console errors or visual issues before moving on.
