@@ -752,48 +752,77 @@ const PLATFORM_MAP = {
 
 function detectPlatformType(situation) {
   const lower = situation.toLowerCase();
-  if (
-    lower.includes("insurance") ||
-    lower.includes("term plan") ||
-    lower.includes("policy") ||
-    lower.includes("cover")
-  )
-    return "insurance";
-  if (
-    lower.includes("invest") ||
-    lower.includes("sip") ||
-    lower.includes("mutual fund") ||
-    lower.includes("stock") ||
-    lower.includes("fd") ||
-    lower.includes("saving")
-  )
-    return "investment";
-  if (
-    lower.includes("job") ||
-    lower.includes("offer") ||
-    lower.includes("salary") ||
-    lower.includes("career") ||
-    lower.includes("switch") ||
-    lower.includes("resign") ||
-    lower.includes("esop")
-  )
-    return "career";
-  if (
-    lower.includes("rent") ||
-    lower.includes("house") ||
-    lower.includes("flat") ||
-    lower.includes("property") ||
-    lower.includes("home loan")
-  )
-    return "housing";
-  if (
-    lower.includes("buy") ||
-    lower.includes("laptop") ||
-    lower.includes("phone") ||
-    lower.includes("purchase")
-  )
-    return "purchase";
-  return null;
+
+  // Score each category by keyword matches
+  const scores = {
+    insurance: 0,
+    investment: 0,
+    career: 0,
+    housing: 0,
+    purchase: 0,
+  };
+
+  // Insurance keywords
+  if (lower.includes("term insurance")) scores.insurance += 3;
+  if (lower.includes("term plan")) scores.insurance += 3;
+  if (lower.includes("life insurance")) scores.insurance += 3;
+  if (lower.includes("health insurance")) scores.insurance += 3;
+  if (lower.includes("buy insurance")) scores.insurance += 2;
+  if (lower.includes("which insurance")) scores.insurance += 2;
+  if (lower.includes("cover i need")) scores.insurance += 2;
+  if (lower.includes("policybazaar")) scores.insurance += 2;
+
+  // Investment keywords
+  if (lower.includes("invest")) scores.investment += 2;
+  if (lower.includes("sip")) scores.investment += 3;
+  if (lower.includes("mutual fund")) scores.investment += 3;
+  if (lower.includes("stock market")) scores.investment += 3;
+  if (lower.includes("fixed deposit")) scores.investment += 2;
+  if (lower.includes("build wealth")) scores.investment += 2;
+  if (lower.includes("start investing")) scores.investment += 3;
+  if (lower.includes("where to invest")) scores.investment += 3;
+  if (lower.includes("portfolio")) scores.investment += 2;
+
+  // Career keywords
+  if (lower.includes("job offer")) scores.career += 3;
+  if (lower.includes("new job")) scores.career += 3;
+  if (lower.includes("should i take")) scores.career += 2;
+  if (lower.includes("esop")) scores.career += 3;
+  if (lower.includes("switch")) scores.career += 2;
+  if (lower.includes("resign")) scores.career += 2;
+  if (lower.includes("career")) scores.career += 2;
+  if (lower.includes("salary hike")) scores.career += 2;
+  if (lower.includes("promotion")) scores.career += 2;
+
+  // Housing keywords
+  if (lower.includes("rent or buy")) scores.housing += 3;
+  if (lower.includes("home loan")) scores.housing += 3;
+  if (lower.includes("buy a house")) scores.housing += 3;
+  if (lower.includes("buy a flat")) scores.housing += 3;
+  if (lower.includes("property")) scores.housing += 2;
+  if (lower.includes("real estate")) scores.housing += 2;
+  if (lower.includes("nobroker")) scores.housing += 3;
+  if (lower.includes("magicbricks")) scores.housing += 3;
+
+  // Purchase keywords
+  if (lower.includes("buy a laptop")) scores.purchase += 3;
+  if (lower.includes("buy a phone")) scores.purchase += 3;
+  if (lower.includes("which laptop")) scores.purchase += 3;
+  if (lower.includes("which phone")) scores.purchase += 3;
+  if (lower.includes("best laptop")) scores.purchase += 2;
+  if (lower.includes("best phone")) scores.purchase += 2;
+
+  // Find the category with the highest score
+  const topCategory = Object.entries(scores).reduce(
+    (best, [category, score]) =>
+      score > best.score ? { category, score } : best,
+    { category: null, score: 0 },
+  );
+
+  // Only return a category if it has a meaningful score
+  if (topCategory.score < 2) return null;
+
+  return topCategory.category;
 }
 
 function PlatformSection({ situation }) {
