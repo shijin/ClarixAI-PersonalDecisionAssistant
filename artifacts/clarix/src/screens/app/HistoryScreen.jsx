@@ -78,6 +78,9 @@ export default function HistoryScreen() {
         assumptions: decision.assumptions,
       }),
     );
+    // Set back destination so recommendation back button
+    // returns to home not intake
+    sessionStorage.setItem("clarix_back_to", "home");
     navigate(ROUTES.RECOMMENDATION);
   };
 
