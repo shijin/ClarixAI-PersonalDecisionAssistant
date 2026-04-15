@@ -119,9 +119,9 @@ export default function ConversationScreen() {
   const isReady = inputText.trim().length > 2 && !isTyping;
 
   useEffect(() => {
-    // Load existing recommendation and situation
     const sit = sessionStorage.getItem("clarix_situation");
     const rec = sessionStorage.getItem("clarix_recommendation");
+    const prefilled = sessionStorage.getItem("clarix_prefilled_question");
 
     if (!sit || !rec) {
       navigate(ROUTES.INTAKE);
@@ -134,22 +134,67 @@ export default function ConversationScreen() {
       const parsed = JSON.parse(rec);
       setRecommendation(parsed);
 
-      // Seed the conversation with the original recommendation
-      // so Claude has full context for follow-up answers
-      setMessages([
-        {
-          role: "user",
-          content: sit,
-        },
-        {
-          role: "assistant",
-          content: JSON.stringify(parsed),
-        },
-      ]);
+      const seededMessages = [
+        { role: "user", content: sit },
+        { role: "assistant", content: JSON.stringify(parsed) },
+      ];
+      setMessages(seededMessages);
+
+      // If a question was pre-selected from the recommendation
+      // screen auto-fill and send it immediately
+      if (prefilled) {
+        sessionStorage.removeItem("clarix_prefilled_question");
+        setInputText(prefilled);
+
+        // Small delay to let the component mount fully
+        setTimeout(() => {
+          autoSendQuestion(prefilled, seededMessages, parsed);
+        }, 500);
+      }
     } catch {
       navigate(ROUTES.INTAKE);
     }
   }, []);
+
+  const autoSendQuestion = async (question, seededMessages, rec) => {
+    setInputText("");
+    setIsTyping(true);
+
+    const userMessage = { role: "user", content: question };
+    const updatedMessages = [...seededMessages, userMessage];
+    setMessages(updatedMessages);
+
+    try {
+      const result = await sendFollowUp(updatedMessages, question);
+
+      let responseText = "";
+      if (result.type === "structured" && result.data?.recommendation) {
+        responseText = result.data.recommendation;
+        if (result.data.summary) {
+          responseText += "\n\n" + result.data.summary;
+        }
+        sessionStorage.setItem(
+          "clarix_recommendation",
+          JSON.stringify(result.data),
+        );
+        setRecommendation(result.data);
+      } else if (result.type === "text") {
+        responseText = result.data;
+      } else {
+        responseText = "Here is what I would consider for your situation.";
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: responseText },
+      ]);
+    } catch {
+      setError("Could not get a response. Please try again.");
+      setMessages(seededMessages);
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {

@@ -890,6 +890,128 @@ function PlatformSection({ situation }) {
     </div>
   );
 }
+
+// ─────────────────────────────────────
+// Suggested follow-up questions
+// Changes based on decision type
+// ─────────────────────────────────────
+
+function getSuggestedQuestions(situation) {
+  const lower = situation.toLowerCase();
+
+  if (
+    lower.includes("term insurance") ||
+    lower.includes("term plan") ||
+    lower.includes("life insurance") ||
+    lower.includes("cover i need")
+  ) {
+    return [
+      "What happens if I miss a premium payment?",
+      "Should I add any riders to my policy?",
+      "How do I compare two insurance plans?",
+      "What is the claims settlement ratio and why does it matter?",
+    ];
+  }
+
+  if (
+    lower.includes("invest") ||
+    lower.includes("sip") ||
+    lower.includes("mutual fund") ||
+    lower.includes("build wealth")
+  ) {
+    return [
+      "Which specific fund should I start with?",
+      "What if the market crashes after I invest?",
+      "Should I increase my SIP amount every year?",
+      "How do I track if my investment is performing well?",
+    ];
+  }
+
+  if (
+    lower.includes("job offer") ||
+    lower.includes("esop") ||
+    lower.includes("career") ||
+    lower.includes("switch")
+  ) {
+    return [
+      "How do I evaluate the ESOP offer?",
+      "What should I negotiate before accepting?",
+      "How do I resign professionally from my current job?",
+      "What if the startup fails in 2 years?",
+    ];
+  }
+
+  if (
+    lower.includes("rent") ||
+    lower.includes("home loan") ||
+    lower.includes("house") ||
+    lower.includes("property")
+  ) {
+    return [
+      "How much home loan can I afford?",
+      "What are the hidden costs of buying a home?",
+      "Should I take a fixed or floating interest rate?",
+      "How long should I stay in the house to make it worth buying?",
+    ];
+  }
+
+  return [
+    "What are the risks I should know about?",
+    "What if my situation changes in 6 months?",
+    "How do I explain this decision to my family?",
+    "What should I do first to act on this?",
+  ];
+}
+
+function SuggestedQuestions({ situation, onQuestionSelect }) {
+  const questions = getSuggestedQuestions(situation);
+
+  return (
+    <div>
+      <p className="section-label mb-3">Questions to explore</p>
+      <div className="flex flex-col gap-2">
+        {questions.map((q, i) => (
+          <button
+            key={i}
+            onClick={() => onQuestionSelect(q)}
+            className="flex items-center justify-between gap-3
+                       px-4 py-3 bg-surface-0 border
+                       border-[rgba(26,25,23,0.08)] rounded-xl
+                       text-left group hover:border-brand-purple
+                       hover:bg-brand-purple-light
+                       transition-all duration-150"
+          >
+            <span
+              className="text-[13px] text-ink-80 font-medium
+                             group-hover:text-brand-purple-dark
+                             leading-snug transition-colors duration-150"
+            >
+              {q}
+            </span>
+            <svg
+              width="14"
+              height="14"
+              fill="none"
+              stroke="#9C9A92"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+              className="flex-shrink-0 group-hover:stroke-brand-purple
+                         transition-colors duration-150"
+            >
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1
+                       2-2h14a2 2 0 0 1 2 2z"
+              />
+            </svg>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RecommendationResult({
   data,
   situation,
@@ -900,6 +1022,7 @@ function RecommendationResult({
   onCorrectAssumption,
   wasUpdated,
   onDefence,
+  onQuestionSelect,
 }) {
   const scrollRef = useRef(null);
   const reasoningRef = useRef(null);
@@ -1116,9 +1239,16 @@ function RecommendationResult({
             </div>
           )}
 
+          {/* Suggested follow-up questions */}
+          <SuggestedQuestions
+            situation={situation}
+            onQuestionSelect={onQuestionSelect}
+          />
+
           {/* Platform integrations */}
           <PlatformSection situation={situation} />
 
+          {/* Situation recap */}
           <div>
             <p className="section-label mb-3">Your situation</p>
             <div className="card">
@@ -1347,6 +1477,12 @@ export default function RecommendationScreen() {
   const handleSave = () => navigate(ROUTES.SAVE);
   const handleShare = () => navigate(ROUTES.SHARE);
   const handleDefence = () => navigate(ROUTES.DEFENCE);
+  const handleQuestionSelect = (question) => {
+    // Store the question so the conversation screen
+    // can auto-send it without the user having to retype
+    sessionStorage.setItem("clarix_prefilled_question", question);
+    navigate(ROUTES.CONVERSATION);
+  };
 
   if (status === "loading") {
     return <LoadingState situation={situation} isUpdating={isUpdating} />;
@@ -1379,6 +1515,7 @@ export default function RecommendationScreen() {
         onCorrectAssumption={handleCorrectAssumption}
         wasUpdated={wasUpdated}
         onDefence={handleDefence}
+        onQuestionSelect={handleQuestionSelect}
       />
     );
   }
