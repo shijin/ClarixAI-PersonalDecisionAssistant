@@ -22,9 +22,17 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo:
+          window.location.origin +
+          "/auth/callback?returnTo=" +
+          encodeURIComponent(
+            sessionStorage.getItem("clarix_return_to") || "/home",
+          ),
+      },
     });
 
     if (error) {

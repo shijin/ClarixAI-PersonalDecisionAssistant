@@ -7,6 +7,7 @@ import LandingScreen from "./screens/public/LandingScreen";
 import SharedRecommendationScreen from "./screens/public/SharedRecommendationScreen";
 
 // Auth screens
+import AuthCallbackScreen from "./screens/auth/AuthCallbackScreen";
 import SignInScreen from "./screens/auth/SignInScreen";
 import EmailVerificationScreen from "./screens/auth/EmailVerificationScreen";
 
@@ -54,6 +55,8 @@ export default function App() {
           path={ROUTES.EMAIL_VERIFY}
           element={<EmailVerificationScreen />}
         />
+
+        <Route path="/auth/callback" element={<AuthCallbackScreen />} />
 
         {/* ── Decision flow — public ── */}
         {/* Users can start a decision without signing in.  */}
