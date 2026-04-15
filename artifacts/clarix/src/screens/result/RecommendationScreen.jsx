@@ -904,6 +904,27 @@ function RecommendationResult({
   const scrollRef = useRef(null);
   const reasoningRef = useRef(null);
 
+  const [showSavePulse, setShowSavePulse] = useState(true);
+  const [showSaveTooltip, setShowSaveTooltip] = useState(true);
+
+  // Show the pulse and tooltip for 4 seconds after load
+  // then fade them out so they do not become annoying
+  useEffect(() => {
+    const pulseTimer = setTimeout(() => setShowSavePulse(false), 4000);
+    const tooltipTimer = setTimeout(() => setShowSaveTooltip(false), 6000);
+    return () => {
+      clearTimeout(pulseTimer);
+      clearTimeout(tooltipTimer);
+    };
+  }, []);
+
+  // Also hide both as soon as the user taps save
+  const handleSaveWithDismiss = () => {
+    setShowSavePulse(false);
+    setShowSaveTooltip(false);
+    onSave();
+  };
+
   const handleScrollToReasoning = () => {
     reasoningRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -941,12 +962,25 @@ function RecommendationResult({
             <IconShare />
           </button>
           <button
-            onClick={onSave}
-            className="w-9 h-9 bg-surface-1 border border-[rgba(26,25,23,0.1)]
-                       rounded-[10px] flex items-center justify-center"
+            onClick={handleSaveWithDismiss}
+            className={`w-[52px] h-12 bg-surface-0 border
+                       rounded-xl flex items-center justify-center
+                       flex-shrink-0 relative transition-all duration-150
+                       ${
+                         showSavePulse
+                           ? "border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.2)] animate-pulse"
+                           : "border-[rgba(26,25,23,0.1)]"
+                       }`}
             aria-label="Save"
           >
             <IconSave />
+            {showSavePulse && (
+              <span
+                className="absolute -top-1 -right-1 w-3 h-3
+                               bg-brand-purple rounded-full
+                               animate-ping"
+              />
+            )}
           </button>
         </div>
       </div>
@@ -1104,34 +1138,85 @@ function RecommendationResult({
                       max-w-[480px] px-5 py-4 bg-surface-1
                       border-t border-[rgba(26,25,23,0.07)]"
       >
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-3">
-            <button className="btn-primary flex-1" onClick={onFollowUp}>
-              <IconChat />
-              Ask a follow-up
-            </button>
-            <button
-              onClick={onShare}
-              className="w-[52px] h-12 bg-surface-0 border
-                         border-[rgba(26,25,23,0.1)] rounded-xl
-                         flex items-center justify-center flex-shrink-0"
-              aria-label="Share"
-            >
-              <IconShare />
-            </button>
-            <button
-              onClick={onSave}
-              className="w-[52px] h-12 bg-surface-0 border
-                         border-[rgba(26,25,23,0.1)] rounded-xl
-                         flex items-center justify-center flex-shrink-0"
-              aria-label="Save"
-            >
-              <IconSave />
+        {/* ── Sticky action bar ── */}
+        <div
+          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full
+                        max-w-[480px] px-5 py-4 bg-surface-1
+                        border-t border-[rgba(26,25,23,0.07)]"
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-3">
+              <button className="btn-primary flex-1" onClick={onFollowUp}>
+                <IconChat />
+                Ask a follow-up
+              </button>
+              <button
+                onClick={onShare}
+                className="w-[52px] h-12 bg-surface-0 border
+                           border-[rgba(26,25,23,0.1)] rounded-xl
+                           flex items-center justify-center flex-shrink-0
+                           relative"
+                aria-label="Share"
+              >
+                <IconShare />
+              </button>
+              <button
+                onClick={onSave}
+                className={`w-[52px] h-12 bg-surface-0 border
+                           rounded-xl flex items-center justify-center
+                           flex-shrink-0 relative transition-all duration-150
+                           ${
+                             showSavePulse
+                               ? "border-brand-purple shadow-[0_0_0_3px_rgba(83,74,183,0.2)] animate-pulse"
+                               : "border-[rgba(26,25,23,0.1)]"
+                           }`}
+                aria-label="Save"
+              >
+                <IconSave />
+                {showSavePulse && (
+                  <span
+                    className="absolute -top-1 -right-1 w-3 h-3
+                                   bg-brand-purple rounded-full
+                                   animate-ping"
+                  />
+                )}
+              </button>
+            </div>
+
+            {/* Save tooltip */}
+            {showSaveTooltip && (
+              <div
+                className="flex items-center justify-center gap-2
+                              px-4 py-2 bg-brand-purple-light border
+                              border-[rgba(83,74,183,0.2)] rounded-xl"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="#534AB7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1
+                           2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                  />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                <span className="text-[12px] font-semibold text-brand-purple">
+                  Tap the save icon to keep this recommendation
+                </span>
+              </div>
+            )}
+
+            <button onClick={onDefence} className="btn-ghost text-[13px]">
+              Help me explain this to someone
             </button>
           </div>
-          <button onClick={onDefence} className="btn-ghost text-[13px]">
-            Help me explain this to someone
-          </button>
         </div>
       </div>
     </div>
