@@ -661,7 +661,206 @@ function PersonalisationChip({ situation }) {
     </div>
   );
 }
+// ─────────────────────────────────────
+// Platform integrations data
+// Maps decision type to relevant
+// action platforms with deep links
+// ─────────────────────────────────────
 
+const PLATFORM_MAP = {
+  insurance: [
+    {
+      name: "PolicyBazaar",
+      tagline: "Compare and buy term insurance plans",
+      url: "https://www.policybazaar.com/life-insurance/term-insurance/",
+      color: "#0066CC",
+      letter: "P",
+    },
+    {
+      name: "Ditto Insurance",
+      tagline: "Get unbiased advice from insurance experts",
+      url: "https://joinditto.in",
+      color: "#E84141",
+      letter: "D",
+    },
+  ],
+  investment: [
+    {
+      name: "Groww",
+      tagline: "Start your SIP in mutual funds",
+      url: "https://groww.in/mutual-funds",
+      color: "#00D09C",
+      letter: "G",
+    },
+    {
+      name: "Zerodha Coin",
+      tagline: "Direct mutual funds at zero commission",
+      url: "https://coin.zerodha.com",
+      color: "#387ED1",
+      letter: "Z",
+    },
+  ],
+  career: [
+    {
+      name: "LinkedIn",
+      tagline: "Research the company and role",
+      url: "https://www.linkedin.com/jobs/",
+      color: "#0A66C2",
+      letter: "in",
+    },
+    {
+      name: "Naukri",
+      tagline: "Compare similar job offers",
+      url: "https://www.naukri.com",
+      color: "#FF7555",
+      letter: "N",
+    },
+  ],
+  housing: [
+    {
+      name: "MagicBricks",
+      tagline: "Browse properties in your city",
+      url: "https://www.magicbricks.com",
+      color: "#E2001A",
+      letter: "M",
+    },
+    {
+      name: "NoBroker",
+      tagline: "Find flats without brokerage",
+      url: "https://www.nobroker.in",
+      color: "#00A651",
+      letter: "N",
+    },
+  ],
+  purchase: [
+    {
+      name: "Amazon India",
+      tagline: "Compare prices and reviews",
+      url: "https://www.amazon.in",
+      color: "#FF9900",
+      letter: "A",
+    },
+    {
+      name: "Flipkart",
+      tagline: "Find the best deals",
+      url: "https://www.flipkart.com",
+      color: "#2874F0",
+      letter: "F",
+    },
+  ],
+};
+
+function detectPlatformType(situation) {
+  const lower = situation.toLowerCase();
+  if (
+    lower.includes("insurance") ||
+    lower.includes("term plan") ||
+    lower.includes("policy") ||
+    lower.includes("cover")
+  )
+    return "insurance";
+  if (
+    lower.includes("invest") ||
+    lower.includes("sip") ||
+    lower.includes("mutual fund") ||
+    lower.includes("stock") ||
+    lower.includes("fd") ||
+    lower.includes("saving")
+  )
+    return "investment";
+  if (
+    lower.includes("job") ||
+    lower.includes("offer") ||
+    lower.includes("salary") ||
+    lower.includes("career") ||
+    lower.includes("switch") ||
+    lower.includes("resign") ||
+    lower.includes("esop")
+  )
+    return "career";
+  if (
+    lower.includes("rent") ||
+    lower.includes("house") ||
+    lower.includes("flat") ||
+    lower.includes("property") ||
+    lower.includes("home loan")
+  )
+    return "housing";
+  if (
+    lower.includes("buy") ||
+    lower.includes("laptop") ||
+    lower.includes("phone") ||
+    lower.includes("purchase")
+  )
+    return "purchase";
+  return null;
+}
+
+function PlatformSection({ situation }) {
+  const type = detectPlatformType(situation);
+  const platforms = PLATFORM_MAP[type];
+
+  if (!platforms) return null;
+
+  return (
+    <div>
+      <p className="section-label mb-3">Take action</p>
+      <div className="flex flex-col gap-3">
+        {platforms.map((p, i) => (
+          <button
+            key={i}
+            onClick={() => window.open(p.url, "_blank")}
+            className="flex items-center gap-4 px-4 py-3 bg-surface-0
+                       border border-[rgba(26,25,23,0.08)] rounded-xl
+                       text-left hover:border-[rgba(26,25,23,0.14)]
+                       transition-colors duration-150 w-full"
+          >
+            {/* Platform icon */}
+            <div
+              className="w-9 h-9 rounded-lg flex items-center
+                         justify-center flex-shrink-0"
+              style={{ backgroundColor: p.color + "20" }}
+            >
+              <span
+                className="text-[12px] font-bold"
+                style={{ color: p.color }}
+              >
+                {p.letter}
+              </span>
+            </div>
+
+            {/* Platform info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-semibold text-ink-100">{p.name}</p>
+              <p className="text-caption text-ink-30 truncate">{p.tagline}</p>
+            </div>
+
+            {/* Arrow */}
+            <svg
+              width="14"
+              height="14"
+              fill="none"
+              stroke="#9C9A92"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+              className="flex-shrink-0"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        ))}
+      </div>
+
+      {/* Disclaimer */}
+      <p className="text-caption text-ink-30 mt-3 leading-relaxed">
+        These are suggestions based on your decision type. Clarix earns no
+        commission from any platform.
+      </p>
+    </div>
+  );
+}
 function RecommendationResult({
   data,
   situation,
@@ -853,6 +1052,9 @@ function RecommendationResult({
               </div>
             </div>
           )}
+
+          {/* Platform integrations */}
+          <PlatformSection situation={situation} />
 
           <div>
             <p className="section-label mb-3">Your situation</p>
