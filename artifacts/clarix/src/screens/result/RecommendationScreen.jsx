@@ -105,10 +105,10 @@ function IconWarning() {
 function IconChevronDown() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       fill="none"
-      stroke="#9C9A92"
+      stroke="#534AB7"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -136,11 +136,67 @@ function IconCheck() {
   );
 }
 
-// ─────────────────────────────────────
-// Quick suggestion helper
-// Returns relevant correction options
-// based on the assumption text
-// ─────────────────────────────────────
+function IconSparkle() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      fill="none"
+      stroke="#534AB7"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+    </svg>
+  );
+}
+
+function countPersonalisedFactors(situation) {
+  const lower = situation.toLowerCase();
+  let count = 0;
+  if (
+    lower.includes("rs ") ||
+    lower.includes("rupee") ||
+    lower.includes("lakh") ||
+    lower.includes("salary") ||
+    lower.includes("earn") ||
+    lower.includes("income")
+  )
+    count++;
+  if (lower.includes("year") || lower.includes("age") || lower.includes(" old"))
+    count++;
+  if (
+    lower.includes("pune") ||
+    lower.includes("mumbai") ||
+    lower.includes("delhi") ||
+    lower.includes("bengaluru") ||
+    lower.includes("hyderabad") ||
+    lower.includes("chennai") ||
+    lower.includes("kolkata") ||
+    lower.includes("city")
+  )
+    count++;
+  if (
+    lower.includes("dependent") ||
+    lower.includes("family") ||
+    lower.includes("wife") ||
+    lower.includes("husband") ||
+    lower.includes("child") ||
+    lower.includes("parent")
+  )
+    count++;
+  if (
+    lower.includes("loan") ||
+    lower.includes("emi") ||
+    lower.includes("debt") ||
+    lower.includes("saving") ||
+    lower.includes("invest")
+  )
+    count++;
+  return Math.max(count, 2);
+}
 
 function getQuickSuggestions(assumption) {
   const lower = assumption.toLowerCase();
@@ -176,12 +232,6 @@ function getQuickSuggestions(assumption) {
   return ["This is incorrect", "My situation is different"];
 }
 
-// ─────────────────────────────────────
-// Assumption row component
-// Handles the inline correction flow
-// for a single assumption
-// ─────────────────────────────────────
-
 function AssumptionRow({ assumption, index, onCorrect }) {
   const [isEditing, setIsEditing] = useState(false);
   const [correction, setCorrection] = useState("");
@@ -209,18 +259,16 @@ function AssumptionRow({ assumption, index, onCorrect }) {
                       : ""
                   }`}
     >
-      {/* Assumption text and action button */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1 flex-1">
-          {/* Label changes based on state */}
           <span
             className={`text-[9px] font-bold uppercase tracking-[0.05em]
-                            ${submitted ? "text-brand-teal-mid" : "text-ink-30"}`}
+                            ${
+                              submitted ? "text-brand-teal-mid" : "text-ink-30"
+                            }`}
           >
             {submitted ? "Corrected" : "Assumed"}
           </span>
-
-          {/* Original assumption — struck through if corrected */}
           <p
             className={`text-body-sm leading-relaxed transition-all duration-200
                          ${
@@ -231,8 +279,6 @@ function AssumptionRow({ assumption, index, onCorrect }) {
           >
             {assumption}
           </p>
-
-          {/* Show the correction the user provided */}
           {submitted && (
             <div className="flex items-center gap-2 mt-1">
               <div
@@ -247,8 +293,6 @@ function AssumptionRow({ assumption, index, onCorrect }) {
             </div>
           )}
         </div>
-
-        {/* Correct / Cancel button */}
         {!submitted && (
           <button
             onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
@@ -261,10 +305,8 @@ function AssumptionRow({ assumption, index, onCorrect }) {
         )}
       </div>
 
-      {/* Inline correction input — shown when editing */}
       {isEditing && !submitted && (
         <div className="flex flex-col gap-2 pt-1">
-          {/* Text input area */}
           <div
             className={`bg-surface-1 rounded-xl p-3 border-[1.5px]
                            transition-all duration-150
@@ -291,8 +333,6 @@ function AssumptionRow({ assumption, index, onCorrect }) {
                          outline-none border-none font-sans"
             />
           </div>
-
-          {/* Quick suggestion pills */}
           <div className="flex gap-2 flex-wrap">
             {getQuickSuggestions(assumption).map((s, si) => (
               <button
@@ -310,8 +350,6 @@ function AssumptionRow({ assumption, index, onCorrect }) {
               </button>
             ))}
           </div>
-
-          {/* Update button */}
           <button
             onClick={handleSubmit}
             disabled={!isReady}
@@ -331,10 +369,6 @@ function AssumptionRow({ assumption, index, onCorrect }) {
   );
 }
 
-// ─────────────────────────────────────
-// Loading state
-// ─────────────────────────────────────
-
 function LoadingState({ situation, isUpdating }) {
   const [dots, setDots] = useState(".");
 
@@ -348,7 +382,6 @@ function LoadingState({ situation, isUpdating }) {
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
-
       <div className="flex items-center justify-between mb-9">
         <div
           className="w-9 h-9 bg-surface-0 border border-[rgba(26,25,23,0.1)]
@@ -364,7 +397,6 @@ function LoadingState({ situation, isUpdating }) {
         <div className="w-9" />
       </div>
 
-      {/* Situation recap card */}
       <div className="card mb-8">
         <p className="section-label mb-2">Your situation</p>
         <p className="text-body-sm text-ink-80 leading-relaxed line-clamp-3">
@@ -372,7 +404,6 @@ function LoadingState({ situation, isUpdating }) {
         </p>
       </div>
 
-      {/* Skeleton blocks */}
       <div className="mb-4">
         <div className="h-4 w-24 bg-surface-2 rounded-xs mb-4 animate-pulse" />
         <div className="h-8 w-full bg-surface-2 rounded-xs mb-2 animate-pulse" />
@@ -385,8 +416,14 @@ function LoadingState({ situation, isUpdating }) {
       <div className="flex flex-col gap-3">
         {[1, 2, 3].map((i) => (
           <div key={i} className="card">
-            <div className="h-3 w-32 bg-surface-2 rounded-xs mb-3 animate-pulse" />
-            <div className="h-3 w-full bg-surface-2 rounded-xs mb-2 animate-pulse" />
+            <div
+              className="h-3 w-32 bg-surface-2 rounded-xs
+                            mb-3 animate-pulse"
+            />
+            <div
+              className="h-3 w-full bg-surface-2 rounded-xs
+                            mb-2 animate-pulse"
+            />
             <div className="h-3 w-4/5 bg-surface-2 rounded-xs animate-pulse" />
           </div>
         ))}
@@ -394,8 +431,8 @@ function LoadingState({ situation, isUpdating }) {
 
       <div className="mt-auto pt-8 flex items-center justify-center gap-3">
         <div
-          className="w-4 h-4 border-2 border-surface-3 border-t-brand-purple
-                        rounded-full animate-spin"
+          className="w-4 h-4 border-2 border-surface-3
+                        border-t-brand-purple rounded-full animate-spin"
         />
         <span className="text-caption text-ink-30">
           {isUpdating
@@ -407,15 +444,10 @@ function LoadingState({ situation, isUpdating }) {
   );
 }
 
-// ─────────────────────────────────────
-// Error state
-// ─────────────────────────────────────
-
 function ErrorState({ onRetry, onBack }) {
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
-
       <div className="flex items-center justify-between mb-9">
         <button
           onClick={onBack}
@@ -451,7 +483,6 @@ function ErrorState({ onRetry, onBack }) {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
-
         <div className="text-center">
           <h2 className="text-h2 text-ink-100 mb-2">
             Could not get your recommendation
@@ -461,7 +492,6 @@ function ErrorState({ onRetry, onBack }) {
             where we left off.
           </p>
         </div>
-
         <div className="flex items-center gap-2">
           <svg
             width="13"
@@ -479,7 +509,6 @@ function ErrorState({ onRetry, onBack }) {
             Your context was saved
           </span>
         </div>
-
         <div className="w-full flex flex-col gap-3 mt-2">
           <button className="btn-primary" onClick={onRetry}>
             Try again
@@ -493,12 +522,6 @@ function ErrorState({ onRetry, onBack }) {
   );
 }
 
-// ─────────────────────────────────────
-// Follow-up needed state
-// Claude needs one more answer before
-// it can produce a recommendation
-// ─────────────────────────────────────
-
 function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
   const [answer, setAnswer] = useState("");
   const isReady = answer.trim().length > 2;
@@ -506,7 +529,6 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
-
       <div className="flex items-center justify-between mb-9">
         <button
           onClick={onBack}
@@ -521,7 +543,6 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         <div className="w-9" />
       </div>
 
-      {/* Situation recap */}
       <div className="card mb-6">
         <p className="section-label mb-2">Your situation</p>
         <p className="text-body-sm text-ink-80 leading-relaxed line-clamp-2">
@@ -529,7 +550,6 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         </p>
       </div>
 
-      {/* Follow-up question */}
       <div
         className="bg-brand-purple-light border border-[rgba(83,74,183,0.2)]
                       rounded-2xl p-4 mb-6"
@@ -553,7 +573,6 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         </p>
       </div>
 
-      {/* Answer input */}
       <div
         className={`bg-surface-0 rounded-2xl p-4 mb-4 border-[1.5px]
                        transition-all duration-150
@@ -575,7 +594,6 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
         />
       </div>
 
-      {/* Quick answer pills */}
       <div className="flex gap-2 flex-wrap mb-8">
         {["Yes", "No", "Not sure"].map((opt) => (
           <button
@@ -607,15 +625,8 @@ function FollowUpNeeded({ question, situation, onAnswer, onBack }) {
   );
 }
 
-// ─────────────────────────────────────
-// Update banner
-// Shows briefly after a correction
-// is applied and recommendation updates
-// ─────────────────────────────────────
-
 function UpdateBanner({ visible }) {
   if (!visible) return null;
-
   return (
     <div
       className="mx-5 mb-4 flex items-center gap-3 px-4 py-3
@@ -635,20 +646,42 @@ function UpdateBanner({ visible }) {
   );
 }
 
-// ─────────────────────────────────────
-// Main recommendation result screen
-// ─────────────────────────────────────
+function PersonalisationChip({ situation }) {
+  const count = countPersonalisedFactors(situation);
+  return (
+    <div
+      className="inline-flex items-center gap-[6px] bg-brand-purple-light
+                    border border-[rgba(83,74,183,0.2)] rounded-pill
+                    px-3 py-[5px] mb-4"
+    >
+      <IconSparkle />
+      <span className="text-[11px] font-semibold text-brand-purple-dark">
+        Built around {count} details specific to your situation
+      </span>
+    </div>
+  );
+}
 
 function RecommendationResult({
   data,
   situation,
+  onBack,
   onFollowUp,
   onSave,
   onShare,
   onCorrectAssumption,
   wasUpdated,
+  onDefence,
 }) {
   const scrollRef = useRef(null);
+  const reasoningRef = useRef(null);
+
+  const handleScrollToReasoning = () => {
+    reasoningRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col">
@@ -660,7 +693,7 @@ function RecommendationResult({
                       bg-surface-0 border-b border-[rgba(26,25,23,0.07)]"
       >
         <button
-          onClick={onFollowUp}
+          onClick={onBack}
           className="w-9 h-9 bg-surface-1 border border-[rgba(26,25,23,0.1)]
                      rounded-[10px] flex items-center justify-center"
           aria-label="Go back"
@@ -691,20 +724,18 @@ function RecommendationResult({
       </div>
 
       {/* Scrollable content */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-32">
-        {/* Update banner — shown after assumption correction */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-40">
         <UpdateBanner visible={wasUpdated} />
 
-        {/* ── Answer zone — white, above the fold ── */}
+        {/* Answer zone */}
         <div
           className="bg-surface-0 px-5 pt-7 pb-8
                         border-b border-[rgba(26,25,23,0.07)]"
         >
-          {/* Context tag */}
           <div
             className="inline-flex items-center gap-[6px] bg-surface-1
                           border border-[rgba(26,25,23,0.08)] rounded-pill
-                          px-3 py-[5px] mb-5"
+                          px-3 py-[5px] mb-4"
           >
             <div className="w-[5px] h-[5px] rounded-full bg-brand-teal-mid" />
             <span className="text-caption text-ink-50">
@@ -712,34 +743,42 @@ function RecommendationResult({
             </span>
           </div>
 
-          {/* Section label */}
+          <div className="block mb-1">
+            <PersonalisationChip situation={situation} />
+          </div>
+
           <p className="section-label mb-3">Your recommendation</p>
 
-          {/* The recommendation — large and confident */}
           <h1
             className="text-[24px] font-extrabold text-ink-100
-                         leading-snug tracking-tight mb-5"
+                         leading-snug tracking-tight mb-4"
           >
             {data.recommendation}
           </h1>
 
-          {/* Summary */}
-          <p className="text-body-lg text-ink-50 leading-relaxed mb-6">
+          <p className="text-body-lg text-ink-50 leading-relaxed mb-5">
             {data.summary}
           </p>
 
-          {/* Scroll hint */}
-          <div className="flex items-center gap-2">
-            <IconChevronDown />
-            <span className="text-caption text-ink-30">
-              Scroll to see the full reasoning
+          <button
+            onClick={handleScrollToReasoning}
+            className="flex items-center gap-2 group"
+          >
+            <span
+              className="text-[13px] font-semibold text-brand-purple
+                             group-hover:text-brand-purple-dark
+                             transition-colors duration-150
+                             underline underline-offset-2
+                             decoration-[rgba(83,74,183,0.3)]"
+            >
+              Why we picked this for you
             </span>
-          </div>
+            <IconChevronDown />
+          </button>
         </div>
 
-        {/* ── Reasoning zone ── */}
-        <div className="px-5 pt-6 flex flex-col gap-5">
-          {/* Why this works for you */}
+        {/* Reasoning zone */}
+        <div ref={reasoningRef} className="px-5 pt-6 flex flex-col gap-5">
           {data.reasons && data.reasons.length > 0 && (
             <div>
               <p className="section-label mb-3">Why this works for you</p>
@@ -764,7 +803,6 @@ function RecommendationResult({
             </div>
           )}
 
-          {/* Trade-off */}
           {data.tradeoff && data.tradeoff.title && (
             <div>
               <p className="section-label mb-3">The trade-off to know</p>
@@ -798,7 +836,6 @@ function RecommendationResult({
             </div>
           )}
 
-          {/* Assumptions — with inline correction flow */}
           {data.assumptions && data.assumptions.length > 0 && (
             <div>
               <p className="section-label mb-3">Assumptions we made</p>
@@ -817,7 +854,6 @@ function RecommendationResult({
             </div>
           )}
 
-          {/* Original situation recap */}
           <div>
             <p className="section-label mb-3">Your situation</p>
             <div className="card">
@@ -831,34 +867,39 @@ function RecommendationResult({
         </div>
       </div>
 
-      {/* ── Sticky action bar ── */}
+      {/* Sticky action bar */}
       <div
         className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full
                       max-w-[480px] px-5 py-4 bg-surface-1
                       border-t border-[rgba(26,25,23,0.07)]"
       >
-        <div className="flex gap-3">
-          <button className="btn-primary flex-1" onClick={onFollowUp}>
-            <IconChat />
-            Ask a follow-up
-          </button>
-          <button
-            onClick={onShare}
-            className="w-[52px] h-12 bg-surface-0 border
-                       border-[rgba(26,25,23,0.1)] rounded-xl
-                       flex items-center justify-center flex-shrink-0"
-            aria-label="Share"
-          >
-            <IconShare />
-          </button>
-          <button
-            onClick={onSave}
-            className="w-[52px] h-12 bg-surface-0 border
-                       border-[rgba(26,25,23,0.1)] rounded-xl
-                       flex items-center justify-center flex-shrink-0"
-            aria-label="Save"
-          >
-            <IconSave />
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-3">
+            <button className="btn-primary flex-1" onClick={onFollowUp}>
+              <IconChat />
+              Ask a follow-up
+            </button>
+            <button
+              onClick={onShare}
+              className="w-[52px] h-12 bg-surface-0 border
+                         border-[rgba(26,25,23,0.1)] rounded-xl
+                         flex items-center justify-center flex-shrink-0"
+              aria-label="Share"
+            >
+              <IconShare />
+            </button>
+            <button
+              onClick={onSave}
+              className="w-[52px] h-12 bg-surface-0 border
+                         border-[rgba(26,25,23,0.1)] rounded-xl
+                         flex items-center justify-center flex-shrink-0"
+              aria-label="Save"
+            >
+              <IconSave />
+            </button>
+          </div>
+          <button onClick={onDefence} className="btn-ghost text-[13px]">
+            Help me explain this to someone
           </button>
         </div>
       </div>
@@ -868,7 +909,10 @@ function RecommendationResult({
 
 // ─────────────────────────────────────
 // Root export
-// Orchestrates all screen states
+// Key fix: checks sessionStorage for an
+// existing recommendation before calling
+// Claude. If one exists it loads instantly
+// without making an API call.
 // ─────────────────────────────────────
 
 export default function RecommendationScreen() {
@@ -883,13 +927,34 @@ export default function RecommendationScreen() {
   const [wasUpdated, setWasUpdated] = useState(false);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("clarix_situation");
-    if (!stored) {
+    const storedSituation = sessionStorage.getItem("clarix_situation");
+    const storedRec = sessionStorage.getItem("clarix_recommendation");
+
+    if (!storedSituation) {
       navigate(ROUTES.INTAKE);
       return;
     }
-    setSituation(stored);
-    fetchRecommendation(stored, false);
+
+    setSituation(storedSituation);
+
+    // ── KEY FIX ──
+    // If a recommendation already exists in sessionStorage
+    // load it instantly without calling Claude again.
+    // This prevents unnecessary API calls when the user
+    // navigates back from the conversation or intake screen.
+    if (storedRec) {
+      try {
+        const parsed = JSON.parse(storedRec);
+        setData(parsed);
+        setStatus("success");
+        return;
+      } catch {
+        // If parsing fails fall through to fetch a fresh one
+      }
+    }
+
+    // No existing recommendation — fetch a fresh one
+    fetchRecommendation(storedSituation, false);
   }, []);
 
   const fetchRecommendation = async (sit, updating = false) => {
@@ -911,7 +976,6 @@ export default function RecommendationScreen() {
 
       if (updating) {
         setWasUpdated(true);
-        // Hide the update banner after 4 seconds
         setTimeout(() => setWasUpdated(false), 4000);
       }
 
@@ -949,10 +1013,15 @@ export default function RecommendationScreen() {
   };
 
   const handleRetry = () => fetchRecommendation(situation, false);
-  const handleBack = () => navigate(ROUTES.INTAKE);
+  const handleBack = () => {
+    navigate(ROUTES.INTAKE, {
+      state: { fromRecommendation: true },
+    });
+  };
   const handleFollowUp = () => navigate(ROUTES.CONVERSATION);
   const handleSave = () => navigate(ROUTES.SAVE);
   const handleShare = () => navigate(ROUTES.SHARE);
+  const handleDefence = () => navigate(ROUTES.DEFENCE);
 
   if (status === "loading") {
     return <LoadingState situation={situation} isUpdating={isUpdating} />;
@@ -978,11 +1047,13 @@ export default function RecommendationScreen() {
       <RecommendationResult
         data={data}
         situation={situation}
+        onBack={handleBack}
         onFollowUp={handleFollowUp}
         onSave={handleSave}
         onShare={handleShare}
         onCorrectAssumption={handleCorrectAssumption}
         wasUpdated={wasUpdated}
+        onDefence={handleDefence}
       />
     );
   }
