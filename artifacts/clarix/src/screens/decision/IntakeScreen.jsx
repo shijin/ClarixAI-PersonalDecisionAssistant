@@ -53,6 +53,11 @@ export default function IntakeScreen() {
       return;
     }
 
+    if (location.state?.fromHome === true) {
+      navigate(ROUTES.HOME);
+      return;
+    }
+
     if (user) {
       // Signed-in user — go back to home screen
       navigate(ROUTES.HOME);

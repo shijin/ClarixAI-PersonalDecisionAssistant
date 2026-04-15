@@ -62,10 +62,15 @@ export default function HomeScreen() {
 
   const handleStartDecision = () => {
     if (inputText.trim().length > 0) {
+      // Store the situation and clear any old recommendation
       sessionStorage.setItem("clarix_situation", inputText.trim());
       sessionStorage.removeItem("clarix_recommendation");
-      navigate(ROUTES.RECOMMENDATION);
+      // Pass fromHome so the back button returns here
+      navigate(ROUTES.RECOMMENDATION, {
+        state: { fromHome: true },
+      });
     } else {
+      // No text typed — go to intake with fromHome flag
       navigate(ROUTES.INTAKE, {
         state: { fromHome: true },
       });
@@ -90,6 +95,7 @@ export default function HomeScreen() {
         assumptions: decision.assumptions,
       }),
     );
+    // Pass fromHome so the back button returns here
     navigate(ROUTES.RECOMMENDATION, {
       state: { fromHome: true },
     });
@@ -248,11 +254,17 @@ export default function HomeScreen() {
                   key={d.id}
                   onClick={() => handleResumeDecision(d)}
                   className={`card text-left border-l-[3px]
-                              ${DECISION_TYPE_COLORS[d.decision_type] || "border-l-ink-30"}
+                              ${
+                                DECISION_TYPE_COLORS[d.decision_type] ||
+                                "border-l-ink-30"
+                              }
                               hover:border-[rgba(26,25,23,0.14)]
                               transition-colors duration-150`}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-1">
+                  <div
+                    className="flex items-start justify-between
+                                  gap-2 mb-1"
+                  >
                     <span
                       className="text-caption text-ink-30 uppercase
                                      tracking-[0.05em] font-bold"
