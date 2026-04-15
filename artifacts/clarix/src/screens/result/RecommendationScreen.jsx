@@ -1015,9 +1015,11 @@ export default function RecommendationScreen() {
 
   const handleRetry = () => fetchRecommendation(situation, false);
   const handleBack = () => {
-    const fromHome = location.state?.fromHome === true;
+    const backTo = sessionStorage.getItem("clarix_back_to");
 
-    if (fromHome) {
+    if (backTo === "home") {
+      // Clear the flag so it does not persist incorrectly
+      sessionStorage.removeItem("clarix_back_to");
       navigate(ROUTES.HOME);
     } else {
       navigate(ROUTES.INTAKE, {

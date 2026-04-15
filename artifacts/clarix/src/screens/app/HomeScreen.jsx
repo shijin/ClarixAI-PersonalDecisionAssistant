@@ -62,18 +62,14 @@ export default function HomeScreen() {
 
   const handleStartDecision = () => {
     if (inputText.trim().length > 0) {
-      // Store the situation and clear any old recommendation
       sessionStorage.setItem("clarix_situation", inputText.trim());
       sessionStorage.removeItem("clarix_recommendation");
-      // Pass fromHome so the back button returns here
-      navigate(ROUTES.RECOMMENDATION, {
-        state: { fromHome: true },
-      });
+      // Store origin so recommendation back button knows where to go
+      sessionStorage.setItem("clarix_back_to", "home");
+      navigate(ROUTES.RECOMMENDATION);
     } else {
-      // No text typed — go to intake with fromHome flag
-      navigate(ROUTES.INTAKE, {
-        state: { fromHome: true },
-      });
+      sessionStorage.setItem("clarix_back_to", "home");
+      navigate(ROUTES.INTAKE);
     }
   };
 
@@ -95,10 +91,9 @@ export default function HomeScreen() {
         assumptions: decision.assumptions,
       }),
     );
-    // Pass fromHome so the back button returns here
-    navigate(ROUTES.RECOMMENDATION, {
-      state: { fromHome: true },
-    });
+    // Store origin so recommendation back button knows where to go
+    sessionStorage.setItem("clarix_back_to", "home");
+    navigate(ROUTES.RECOMMENDATION);
   };
 
   return (

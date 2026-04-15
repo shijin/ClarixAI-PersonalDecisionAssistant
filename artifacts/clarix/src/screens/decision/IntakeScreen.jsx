@@ -48,23 +48,22 @@ export default function IntakeScreen() {
 
   const handleBack = () => {
     if (cameFromRecommendation) {
-      // Came from recommendation — go back to it
       navigate(ROUTES.RECOMMENDATION);
       return;
     }
 
-    if (location.state?.fromHome === true) {
+    const backTo = sessionStorage.getItem("clarix_back_to");
+    if (backTo === "home") {
+      sessionStorage.removeItem("clarix_back_to");
       navigate(ROUTES.HOME);
       return;
     }
 
     if (user) {
-      // Signed-in user — go back to home screen
       navigate(ROUTES.HOME);
       return;
     }
 
-    // Not signed in — go to landing page
     navigate(ROUTES.LANDING);
   };
 
