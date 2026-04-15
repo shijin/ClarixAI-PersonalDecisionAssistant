@@ -23,62 +23,50 @@ export default function SignInScreen() {
 
     const returnTo = sessionStorage.getItem("clarix_return_to") || ROUTES.HOME;
 
-    // Step 1 — Try to sign in with existing credentials
+    // First try signing in
     const { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({ email, password });
 
-    if (!signInError && signInData?.session) {
-      // Existing verified user — sign in successful
+    if (signInData?.session) {
+      // Success — existing user signed in
       sessionStorage.removeItem("clarix_return_to");
       navigate(returnTo);
       setLoading(false);
       return;
     }
 
-    // Step 2 — Sign in failed
-    // Check if it is wrong credentials or no account yet
-    if (
-      signInError?.message?.includes("Invalid login credentials") ||
-      signInError?.message?.includes("Email not confirmed")
-    ) {
-      // Try creating a new account
-      const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo:
-              window.location.origin +
-              "/auth/callback?returnTo=" +
-              encodeURIComponent(returnTo),
-          },
-        });
+    // Sign in failed — try signing up as new user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
+      {
+        email,
+        password,
+      },
+    );
 
-      if (signUpError) {
-        setError(signUpError.message);
-        setLoading(false);
-        return;
-      }
-
-      // Check for stuck unverified account
-      if (signUpData?.user?.identities?.length === 0) {
-        setError(
-          "This email is registered but not verified. " +
-            "Please check your inbox for a verification email " +
-            "or try a different email address.",
-        );
-        setLoading(false);
-        return;
-      }
-
-      // New account created — go to verification screen
-      navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
 
-    // Step 3 — Some other error
-    setError(signInError?.message || "Something went wrong. Please try again.");
+    if (signUpData?.session) {
+      // New user signed up and auto-logged in
+      // This happens when email confirmation is OFF
+      sessionStorage.removeItem("clarix_return_to");
+      navigate(returnTo);
+      setLoading(false);
+      return;
+    }
+
+    if (signUpData?.user?.identities?.length === 0) {
+      // Account exists but wrong password
+      setError("Incorrect password. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    // Email confirmation is ON — send to verify screen
+    navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
     setLoading(false);
   };
 
@@ -87,15 +75,10 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
 
-    const returnTo = sessionStorage.getItem("clarix_return_to") || ROUTES.HOME;
-
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo:
-          window.location.origin +
-          "/auth/callback?returnTo=" +
-          encodeURIComponent(returnTo),
+        emailRedirectTo: window.location.origin + "/auth/callback",
       },
     });
 
