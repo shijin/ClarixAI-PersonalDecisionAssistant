@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getRecommendation } from "../../lib/claude";
 import { ROUTES } from "../../constants/routes";
 
@@ -917,6 +917,7 @@ function RecommendationResult({
 
 export default function RecommendationScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
@@ -1014,9 +1015,15 @@ export default function RecommendationScreen() {
 
   const handleRetry = () => fetchRecommendation(situation, false);
   const handleBack = () => {
-    navigate(ROUTES.INTAKE, {
-      state: { fromRecommendation: true },
-    });
+    const fromHome = location.state?.fromHome === true;
+
+    if (fromHome) {
+      navigate(ROUTES.HOME);
+    } else {
+      navigate(ROUTES.INTAKE, {
+        state: { fromRecommendation: true },
+      });
+    }
   };
   const handleFollowUp = () => navigate(ROUTES.CONVERSATION);
   const handleSave = () => navigate(ROUTES.SAVE);

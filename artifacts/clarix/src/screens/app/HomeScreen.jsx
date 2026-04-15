@@ -63,9 +63,12 @@ export default function HomeScreen() {
   const handleStartDecision = () => {
     if (inputText.trim().length > 0) {
       sessionStorage.setItem("clarix_situation", inputText.trim());
+      sessionStorage.removeItem("clarix_recommendation");
       navigate(ROUTES.RECOMMENDATION);
     } else {
-      navigate(ROUTES.INTAKE);
+      navigate(ROUTES.INTAKE, {
+        state: { fromHome: true },
+      });
     }
   };
 
@@ -87,7 +90,9 @@ export default function HomeScreen() {
         assumptions: decision.assumptions,
       }),
     );
-    navigate(ROUTES.RECOMMENDATION);
+    navigate(ROUTES.RECOMMENDATION, {
+      state: { fromHome: true },
+    });
   };
 
   return (
