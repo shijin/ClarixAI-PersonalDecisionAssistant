@@ -11,7 +11,6 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [magicSent, setMagicSent] = useState(false);
 
   const isEmailValid = email.includes("@") && email.includes(".");
   const isFormReady =
@@ -22,43 +21,65 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo:
-          window.location.origin +
-          "/auth/callback?returnTo=" +
-          encodeURIComponent(
-            sessionStorage.getItem("clarix_return_to") || "/home",
-          ),
-      },
-    });
+    const returnTo = sessionStorage.getItem("clarix_return_to") || ROUTES.HOME;
 
-    if (error) {
-      // New user — try signing up instead
-      if (error.message.includes("Invalid login credentials")) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (signUpError) {
-          setError(signUpError.message);
-          setLoading(false);
-          return;
-        }
-        navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
-        return;
-      }
-      setError(error.message);
+    // Step 1 — Try to sign in with existing credentials
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({ email, password });
+
+    if (!signInError && signInData?.session) {
+      // Existing verified user — sign in successful
+      sessionStorage.removeItem("clarix_return_to");
+      navigate(returnTo);
       setLoading(false);
       return;
     }
 
-    // Signed in — go to home or back to save flow
-    const returnTo = sessionStorage.getItem("clarix_return_to");
-    sessionStorage.removeItem("clarix_return_to");
-    navigate(returnTo || ROUTES.HOME);
+    // Step 2 — Sign in failed
+    // Check if it is wrong credentials or no account yet
+    if (
+      signInError?.message?.includes("Invalid login credentials") ||
+      signInError?.message?.includes("Email not confirmed")
+    ) {
+      // Try creating a new account
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo:
+              window.location.origin +
+              "/auth/callback?returnTo=" +
+              encodeURIComponent(returnTo),
+          },
+        });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Check for stuck unverified account
+      if (signUpData?.user?.identities?.length === 0) {
+        setError(
+          "This email is registered but not verified. " +
+            "Please check your inbox for a verification email " +
+            "or try a different email address.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      // New account created — go to verification screen
+      navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
+      setLoading(false);
+      return;
+    }
+
+    // Step 3 — Some other error
+    setError(signInError?.message || "Something went wrong. Please try again.");
+    setLoading(false);
   };
 
   const handleMagicLink = async () => {
@@ -66,10 +87,15 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
 
+    const returnTo = sessionStorage.getItem("clarix_return_to") || ROUTES.HOME;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin + ROUTES.HOME,
+        emailRedirectTo:
+          window.location.origin +
+          "/auth/callback?returnTo=" +
+          encodeURIComponent(returnTo),
       },
     });
 
@@ -79,9 +105,8 @@ export default function SignInScreen() {
       return;
     }
 
-    setMagicSent(true);
-    setLoading(false);
     navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
+    setLoading(false);
   };
 
   const handleSubmit = () => {
@@ -96,7 +121,6 @@ export default function SignInScreen() {
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
 
-      {/* Nav */}
       <div className="flex items-center justify-between mb-10">
         <button
           onClick={() => navigate(-1)}
@@ -120,7 +144,6 @@ export default function SignInScreen() {
         <div className="w-9" />
       </div>
 
-      {/* Wordmark */}
       <div className="flex items-center gap-2 mb-8">
         <div
           className="w-7 h-7 bg-brand-purple rounded-lg
@@ -136,7 +159,10 @@ export default function SignInScreen() {
             strokeLinejoin="round"
             viewBox="0 0 24 24"
           >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1
+                     2-2h14a2 2 0 0 1 2 2z"
+            />
           </svg>
         </div>
         <span className="text-[16px] font-bold text-ink-100 tracking-tight">
@@ -144,7 +170,6 @@ export default function SignInScreen() {
         </span>
       </div>
 
-      {/* Heading */}
       <h1
         className="text-[26px] font-extrabold text-ink-100
                      leading-snug tracking-tight mb-2"
@@ -156,7 +181,6 @@ export default function SignInScreen() {
         needed for your first three decisions.
       </p>
 
-      {/* Mode toggle */}
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => {
@@ -190,7 +214,6 @@ export default function SignInScreen() {
         </button>
       </div>
 
-      {/* Email field */}
       <div className="flex flex-col gap-1 mb-4">
         <label className="text-label text-ink-80">Email address</label>
         <input
@@ -204,7 +227,6 @@ export default function SignInScreen() {
         />
       </div>
 
-      {/* Password field — only in password mode */}
       {mode === "password" && (
         <div className="flex flex-col gap-1 mb-6">
           <label className="text-label text-ink-80">Password</label>
@@ -226,11 +248,11 @@ export default function SignInScreen() {
         </p>
       )}
 
-      {/* Error message */}
       {error && (
         <div
-          className="flex items-start gap-2 px-4 py-3 bg-semantic-error-bg
-                        border border-[rgba(163,45,45,0.2)] rounded-xl mb-4"
+          className="flex items-start gap-2 px-4 py-3
+                        bg-semantic-error-bg border
+                        border-[rgba(163,45,45,0.2)] rounded-xl mb-4"
         >
           <svg
             width="14"
@@ -253,7 +275,6 @@ export default function SignInScreen() {
         </div>
       )}
 
-      {/* Submit button */}
       <button
         onClick={handleSubmit}
         disabled={!isFormReady || loading}
@@ -262,8 +283,8 @@ export default function SignInScreen() {
         {loading ? (
           <div className="flex items-center gap-2">
             <div
-              className="w-4 h-4 border-2 border-white border-t-transparent
-                            rounded-full animate-spin"
+              className="w-4 h-4 border-2 border-white
+                            border-t-transparent rounded-full animate-spin"
             />
             <span>
               {mode === "magic" ? "Sending link..." : "Signing in..."}
@@ -276,8 +297,10 @@ export default function SignInScreen() {
         )}
       </button>
 
-      {/* Terms */}
-      <p className="text-caption text-ink-30 text-center leading-relaxed mt-auto">
+      <p
+        className="text-caption text-ink-30 text-center
+                    leading-relaxed mt-auto"
+      >
         By continuing you agree to our Terms of Service. We never sell your data
         or show you ads.
       </p>
