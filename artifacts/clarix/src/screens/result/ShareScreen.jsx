@@ -56,21 +56,14 @@ export default function ShareScreen() {
       const url = window.location.origin + "/s/" + data.share_id;
       setShareUrl(url);
     } catch {
-      setShareUrl(window.location.origin + ROUTES.RECOMMENDATION);
+      setShareUrl(window.location.origin);
     } finally {
       setGenerating(false);
     }
   };
 
   const handleCopy = async () => {
-    const textToCopy =
-      shareUrl ||
-      (recommendation
-        ? "My recommendation from Clarix: " +
-          recommendation.recommendation +
-          " — " +
-          window.location.origin
-        : window.location.origin);
+    const textToCopy = shareUrl || window.location.origin;
     try {
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
@@ -88,11 +81,25 @@ export default function ShareScreen() {
   };
 
   const handleWhatsApp = () => {
-    const text = recommendation
-      ? "Check out this recommendation from Clarix: " +
-        recommendation.recommendation +
-        (shareUrl ? " — " + shareUrl : "")
-      : "Check out Clarix — " + window.location.origin;
+    if (!recommendation) return;
+
+    // Keep WhatsApp message short to avoid truncation
+    // wa.me URLs have a character limit so we send
+    // one sentence recommendation plus the app link only
+    const sentence = recommendation.recommendation || "";
+
+    // Truncate to 100 characters if still too long
+    const truncated =
+      sentence.length > 100 ? sentence.slice(0, 97) + "..." : sentence;
+
+    const appLink = "https://clarix-ai-personal-decision-assista.vercel.app";
+
+    const text =
+      "I used Clarix AI to help me decide: " +
+      truncated +
+      "\n\nGet your own recommendation: " +
+      appLink;
+
     window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
   };
 
@@ -104,8 +111,9 @@ export default function ShareScreen() {
         recommendation.recommendation +
         "\n\n" +
         (recommendation.summary || "") +
-        (shareUrl ? "\n\nView the full reasoning here: " + shareUrl : "")
-      : "Check out Clarix: " + window.location.origin;
+        "\n\nGet your own recommendation at: " +
+        "https://clarix-ai-personal-decision-assista.vercel.app"
+      : "Check out Clarix: https://clarix-ai-personal-decision-assista.vercel.app";
 
     window.open(
       "mailto:?subject=" +
