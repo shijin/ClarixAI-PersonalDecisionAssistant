@@ -17,36 +17,40 @@ export default function SignInScreen() {
     isEmailValid && (mode === "magic" ? true : password.length >= 6);
 
   const handlePostSignIn = async () => {
-    const draftId = localStorage.getItem("clarix_draft_id");
+    const draftId = localStorage.getItem('clarix_draft_id')
 
     if (draftId) {
-      const { data: draft, error: draftError } = await supabase
-        .from("drafts")
-        .select("*")
-        .eq("session_id", draftId)
-        .single();
+      const { data: draft, error: draftError } =
+        await supabase
+          .from('drafts')
+          .select('*')
+          .eq('session_id', draftId)
+          .single()
 
       if (!draftError && draft) {
-        localStorage.setItem("clarix_situation", draft.situation);
+        localStorage.setItem('clarix_situation', draft.situation)
         localStorage.setItem(
-          "clarix_recommendation",
-          JSON.stringify(draft.recommendation),
-        );
-        localStorage.removeItem("clarix_draft_id");
-        navigate(ROUTES.SAVE);
-        return;
+          'clarix_recommendation',
+          JSON.stringify(draft.recommendation)
+        )
+        localStorage.removeItem('clarix_draft_id')
+        // Go to recommendation screen not save prompt
+        // User is now signed in and can tap Save from there
+        navigate(ROUTES.RECOMMENDATION)
+        return
       }
     }
 
-    const sit = localStorage.getItem("clarix_situation");
-    const rec = localStorage.getItem("clarix_recommendation");
+    const sit = localStorage.getItem('clarix_situation')
+    const rec = localStorage.getItem('clarix_recommendation')
 
     if (sit && rec) {
-      navigate(ROUTES.SAVE);
-      return;
+      // Go to recommendation screen not save prompt
+      navigate(ROUTES.RECOMMENDATION)
+      return
     }
 
-    navigate(ROUTES.HOME);
+    navigate(ROUTES.HOME)
   };
 
   const handlePasswordSignIn = async () => {
