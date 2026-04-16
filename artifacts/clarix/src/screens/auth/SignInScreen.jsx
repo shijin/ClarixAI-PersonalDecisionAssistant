@@ -52,7 +52,7 @@ export default function SignInScreen() {
       return
     }
     navigate(ROUTES.HOME)
-  }
+  };
 
     // Check if situation exists in either storage
     const situation =
@@ -358,4 +358,4 @@ export default function SignInScreen() {
       </p>
     </div>
   );
-}
+
