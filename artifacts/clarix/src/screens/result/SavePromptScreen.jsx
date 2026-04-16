@@ -98,13 +98,13 @@ export default function SavePromptScreen() {
         localStorage.setItem("clarix_draft_id", sessionId);
 
         // Store where to return after sign in
-        sessionStorage.setItem("clarix_return_to", ROUTES.SAVE);
+        localStorage.setItem("clarix_return_to", ROUTES.SAVE);
       } catch (err) {
         // Draft failed — fall back to normal sign in flow
         // The user will lose their recommendation but can
         // describe their situation again
         console.error("Draft save failed:", err);
-        sessionStorage.setItem("clarix_return_to", ROUTES.SAVE);
+        localStorage.setItem("clarix_return_to", ROUTES.SAVE);
       } finally {
         setSavingDraft(false);
       }
@@ -129,6 +129,7 @@ export default function SavePromptScreen() {
       // Clear sessionStorage after successful save
       sessionStorage.removeItem("clarix_situation");
       sessionStorage.removeItem("clarix_recommendation");
+      localStorage.removeItem("clarix_return_to");
     } else {
       setError("Something went wrong. Please try again.");
     }

@@ -21,14 +21,18 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
 
-    const returnTo = sessionStorage.getItem("clarix_return_to") || ROUTES.HOME;
+    const returnTo =
+      localStorage.getItem("clarix_return_to") ||
+      sessionStorage.getItem("clarix_return_to") ||
+      ROUTES.HOME;
 
     // First try signing in
     const { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({ email, password });
 
     if (signInData?.session) {
-      // Success — existing user signed in
+      // Success — existing user signed
+      localStorage.removeItem("clarix_return_to");
       sessionStorage.removeItem("clarix_return_to");
       navigate(returnTo);
       setLoading(false);
@@ -61,6 +65,7 @@ export default function SignInScreen() {
     if (signUpData?.session) {
       // New user signed up and auto-logged in
       // This happens when email confirmation is OFF
+      localStorage.removeItem("clarix_return_to");
       sessionStorage.removeItem("clarix_return_to");
       navigate(returnTo);
       setLoading(false);
