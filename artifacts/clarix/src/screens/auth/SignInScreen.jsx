@@ -16,59 +16,37 @@ export default function SignInScreen() {
   const isFormReady =
     isEmailValid && (mode === "magic" ? true : password.length >= 6);
 
-  // ─────────────────────────────────────
-  // After any successful sign in check
-  // for a pending draft first. If found
-  // go to save prompt. Otherwise go home.
-  // ─────────────────────────────────────
   const handlePostSignIn = async () => {
-    const draftId = localStorage.getItem('clarix_draft_id')
+    const draftId = localStorage.getItem("clarix_draft_id");
 
     if (draftId) {
-      const { data: draft, error: draftError } =
-        await supabase
-          .from('drafts')
-          .select('*')
-          .eq('session_id', draftId)
-          .single()
+      const { data: draft, error: draftError } = await supabase
+        .from("drafts")
+        .select("*")
+        .eq("session_id", draftId)
+        .single();
 
       if (!draftError && draft) {
-        // Write to both localStorage and sessionStorage
-        localStorage.setItem('clarix_situation', draft.situation)
+        localStorage.setItem("clarix_situation", draft.situation);
         localStorage.setItem(
-          'clarix_recommendation',
-          JSON.stringify(draft.recommendation)
-        )
-        localStorage.removeItem('clarix_draft_id')
-        navigate(ROUTES.SAVE)
-        return       
+          "clarix_recommendation",
+          JSON.stringify(draft.recommendation),
+        );
+        localStorage.removeItem("clarix_draft_id");
+        navigate(ROUTES.SAVE);
+        return;
       }
     }
-    const sit = localStorage.getItem('clarix_situation')
-    const rec = localStorage.getItem('clarix_recommendation')
+
+    const sit = localStorage.getItem("clarix_situation");
+    const rec = localStorage.getItem("clarix_recommendation");
 
     if (sit && rec) {
-      navigate(ROUTES.SAVE)
-      return
-    }
-    navigate(ROUTES.HOME)
-  };
-
-    // Check if situation exists in either storage
-    const situation =
-      localStorage.getItem('clarix_situation') ||
-      sessionStorage.getItem('clarix_situation')
-
-    const recommendation =
-      localStorage.getItem('clarix_recommendation') ||
-      sessionStorage.getItem('clarix_recommendation')
-
-    if (situation && recommendation) {
-      navigate(ROUTES.SAVE)
-      return
+      navigate(ROUTES.SAVE);
+      return;
     }
 
-    navigate(ROUTES.HOME)
+    navigate(ROUTES.HOME);
   };
 
   const handlePasswordSignIn = async () => {
@@ -358,4 +336,4 @@ export default function SignInScreen() {
       </p>
     </div>
   );
-
+}
