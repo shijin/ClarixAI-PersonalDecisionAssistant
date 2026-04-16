@@ -37,10 +37,13 @@ export default function AuthCallbackScreen() {
         }
 
         // ── Draft check ──
-        // Check if there is a pending draft from before
-        // the user signed up. If yes restore it and send
-        // the user to the save prompt.
-        const draftId = localStorage.getItem("clarix_draft_id");
+        // Read draft ID from URL query parameter first
+        // This is more reliable than localStorage because
+        // it works even when the verification link opens
+        // in a different browser or tab
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId =
+          urlParams.get("draft") || localStorage.getItem("clarix_draft_id");
 
         if (draftId) {
           const { data: draft, error: draftError } = await supabase
@@ -51,12 +54,14 @@ export default function AuthCallbackScreen() {
 
           if (!draftError && draft) {
             // Restore the recommendation to sessionStorage
-            // so SavePromptScreen can read it normally
             sessionStorage.setItem("clarix_situation", draft.situation);
             sessionStorage.setItem(
               "clarix_recommendation",
               JSON.stringify(draft.recommendation),
             );
+
+            // Clean up the draft ID from localStorage
+            localStorage.removeItem("clarix_draft_id");
 
             // Send user directly to save prompt
             navigate("/save");
@@ -64,9 +69,8 @@ export default function AuthCallbackScreen() {
           }
         }
 
-        // No draft — check returnTo or go home
-        const params = new URLSearchParams(window.location.search);
-        const returnTo = params.get("returnTo") || "/home";
+        // No draft — go to returnTo or home
+        const returnTo = urlParams.get("returnTo") || "/home";
         navigate(returnTo);
       } catch (err) {
         console.error("Auth callback error:", err);

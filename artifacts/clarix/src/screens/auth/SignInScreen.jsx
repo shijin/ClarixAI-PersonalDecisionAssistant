@@ -35,13 +35,19 @@ export default function SignInScreen() {
       return;
     }
 
-    // Sign in failed — try signing up as new user
+    // Get the draft ID from localStorage if it exists
+    const draftId = localStorage.getItem("clarix_draft_id");
+
+    const redirectUrl = draftId
+      ? window.location.origin + "/auth/callback?draft=" + draftId
+      : window.location.origin + "/auth/callback";
+
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
       {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin + "/auth/callback",
+          emailRedirectTo: redirectUrl,
         },
       },
     );
