@@ -40,20 +40,37 @@ export default function SavePromptScreen() {
 
   // Read data synchronously on first render only
   // useRef ensures this never changes on re-renders
-  const storedData = useRef(getStoredData());
-  const situation = storedData.current.sit;
-  const initRec = storedData.current.rec;
-
-  const [recommendation, setRecommendation] = useState(initRec);
+  const [situation, setSituation] = useState(
+    () =>
+      localStorage.getItem("clarix_situation") ||
+      sessionStorage.getItem("clarix_situation") ||
+      "",
+  );
+  const [recommendation, setRecommendation] = useState(() => {
+    const str =
+      localStorage.getItem("clarix_recommendation") ||
+      sessionStorage.getItem("clarix_recommendation") ||
+      "";
+    if (!str) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return null;
+    }
+  });
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
   const [savingDraft, setSavingDraft] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
-  // If no data at all redirect to intake
-  if (!situation || !recommendation) {
-    navigate(ROUTES.INTAKE);
-    return null;
-  }
+  useEffect(() => {
+    if (!situation || !recommendation) {
+      if (!redirecting) {
+        setRedirecting(true);
+        navigate(ROUTES.INTAKE);
+      }
+    }
+  }, [situation, recommendation]);
 
   const handleSave = async () => {
     if (!recommendation) return;
