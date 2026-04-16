@@ -16,71 +16,98 @@ export default function SignInScreen() {
   const isFormReady =
     isEmailValid && (mode === "magic" ? true : password.length >= 6);
 
+  // ─────────────────────────────────────
+  // After any successful sign in check
+  // for a pending draft first. If found
+  // go to save prompt. Otherwise go home.
+  // ─────────────────────────────────────
+  const handlePostSignIn = async () => {
+    const draftId = localStorage.getItem("clarix_draft_id");
+
+    if (draftId) {
+      // Fetch the draft and restore to sessionStorage
+      const { data: draft, error: draftError } = await supabase
+        .from("drafts")
+        .select("*")
+        .eq("session_id", draftId)
+        .single();
+
+      if (!draftError && draft) {
+        sessionStorage.setItem("clarix_situation", draft.situation);
+        sessionStorage.setItem(
+          "clarix_recommendation",
+          JSON.stringify(draft.recommendation),
+        );
+        // Do not delete draft yet — SavePromptScreen will clean it up
+        navigate(ROUTES.SAVE);
+        return;
+      }
+    }
+
+    // No draft — go to home
+    navigate(ROUTES.HOME);
+  };
+
   const handlePasswordSignIn = async () => {
     if (!isFormReady) return;
     setLoading(true);
     setError(null);
 
-    const returnTo =
-      localStorage.getItem("clarix_return_to") ||
-      sessionStorage.getItem("clarix_return_to") ||
-      ROUTES.HOME;
-
-    // First try signing in
+    // Step 1 — Try signing in with existing credentials
     const { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({ email, password });
 
     if (signInData?.session) {
-      // Success — existing user signed
-      localStorage.removeItem("clarix_return_to");
-      sessionStorage.removeItem("clarix_return_to");
-      navigate(returnTo);
+      await handlePostSignIn();
       setLoading(false);
       return;
     }
 
-    // Get the draft ID from localStorage if it exists
-    const draftId = localStorage.getItem("clarix_draft_id");
+    // Step 2 — Sign in failed — try signing up
+    if (
+      signInError?.message?.includes("Invalid login credentials") ||
+      signInError?.message?.includes("Email not confirmed")
+    ) {
+      const draftId = localStorage.getItem("clarix_draft_id");
+      const redirectUrl = draftId
+        ? window.location.origin + "/?draft=" + draftId
+        : window.location.origin;
 
-    const redirectUrl = draftId
-      ? window.location.origin + "/?draft=" + draftId
-      : window.location.origin;
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+          },
+        });
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-      {
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-        },
-      },
-    );
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
 
-    if (signUpError) {
-      setError(signUpError.message);
+      if (signUpData?.user?.identities?.length === 0) {
+        setError("Incorrect password. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (signUpData?.session) {
+        // Email confirmation OFF — auto logged in
+        await handlePostSignIn();
+        setLoading(false);
+        return;
+      }
+
+      // Email confirmation ON — go to verify screen
+      navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
       setLoading(false);
       return;
     }
 
-    if (signUpData?.session) {
-      // New user signed up and auto-logged in
-      // This happens when email confirmation is OFF
-      localStorage.removeItem("clarix_return_to");
-      sessionStorage.removeItem("clarix_return_to");
-      navigate(returnTo);
-      setLoading(false);
-      return;
-    }
-
-    if (signUpData?.user?.identities?.length === 0) {
-      // Account exists but wrong password
-      setError("Incorrect password. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    // Email confirmation is ON — send to verify screen
-    navigate(ROUTES.EMAIL_VERIFY, { state: { email } });
+    setError(signInError?.message || "Something went wrong. Please try again.");
     setLoading(false);
   };
 
@@ -89,10 +116,15 @@ export default function SignInScreen() {
     setLoading(true);
     setError(null);
 
+    const draftId = localStorage.getItem("clarix_draft_id");
+    const redirectUrl = draftId
+      ? window.location.origin + "/?draft=" + draftId
+      : window.location.origin;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin + "/auth/callback",
+        emailRedirectTo: redirectUrl,
       },
     });
 
