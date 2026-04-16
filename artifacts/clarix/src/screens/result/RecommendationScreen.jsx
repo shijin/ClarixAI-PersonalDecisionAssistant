@@ -1029,12 +1029,13 @@ function RecommendationResult({
 
   const [showSavePulse, setShowSavePulse] = useState(true);
   const [showSaveTooltip, setShowSaveTooltip] = useState(true);
+  const [afterCorrection, setAfterCorrection] = useState(false);
 
   // Show the pulse and tooltip for 4 seconds after load
   // then fade them out so they do not become annoying
   useEffect(() => {
-    const pulseTimer = setTimeout(() => setShowSavePulse(false), 4000);
-    const tooltipTimer = setTimeout(() => setShowSaveTooltip(false), 6000);
+    const pulseTimer = setTimeout(() => setShowSavePulse(false), 15000);
+    const tooltipTimer = setTimeout(() => setShowSaveTooltip(false), 20000);
     return () => {
       clearTimeout(pulseTimer);
       clearTimeout(tooltipTimer);
@@ -1338,7 +1339,9 @@ function RecommendationResult({
                   <polyline points="7 3 7 8 15 8" />
                 </svg>
                 <span className="text-[12px] font-semibold text-brand-purple">
-                  Tap the save icon to keep this recommendation
+                  {afterCorrection
+                    ? "Updated for you — save it before you leave"
+                    : "Save this — you worked hard to get here"}
                 </span>
               </div>
             )}
@@ -1457,6 +1460,14 @@ export default function RecommendationScreen() {
     setSituation(enriched);
     sessionStorage.setItem("clarix_situation", enriched);
     await fetchRecommendation(enriched, true);
+
+    // Show save nudge again after assumption correction
+    // This is the highest intent moment — user just refined their recommendation
+    setAfterCorrection(true);
+    setShowSavePulse(true);
+    setShowSaveTooltip(true);
+    setTimeout(() => setShowSavePulse(false), 15000);
+    setTimeout(() => setShowSaveTooltip(false), 20000);
   };
 
   const handleRetry = () => fetchRecommendation(situation, false);
@@ -1475,12 +1486,9 @@ export default function RecommendationScreen() {
   };
   const handleFollowUp = () => navigate(ROUTES.CONVERSATION);
   const handleSave = () => {
-    localStorage.setItem('clarix_situation', situation)
-    localStorage.setItem(
-      'clarix_recommendation',
-      JSON.stringify(data)
-    )
-    navigate(ROUTES.SAVE)
+    localStorage.setItem("clarix_situation", situation);
+    localStorage.setItem("clarix_recommendation", JSON.stringify(data));
+    navigate(ROUTES.SAVE);
   };
   const handleShare = () => navigate(ROUTES.SHARE);
   const handleDefence = () => navigate(ROUTES.DEFENCE);
