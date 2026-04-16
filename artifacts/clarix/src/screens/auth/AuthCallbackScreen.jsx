@@ -7,23 +7,71 @@ export default function AuthCallbackScreen() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Supabase puts the session tokens in the URL hash
-      // after email verification. We need to exchange them
-      // for a real session.
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        // Process the hash tokens from Supabase verification email
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1),
+        );
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
 
-      // Get the returnTo param from the URL if present
-      const params = new URLSearchParams(window.location.search);
-      const returnTo = params.get("returnTo") || "/home";
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-      if (error || !data.session) {
-        // Something went wrong — send to sign in
+          if (error) {
+            console.error("Session error:", error);
+            navigate("/sign-in");
+            return;
+          }
+        }
+
+        // Verify session is valid
+        const { data } = await supabase.auth.getSession();
+
+        if (!data?.session) {
+          navigate("/sign-in");
+          return;
+        }
+
+        // ── Draft check ──
+        // Check if there is a pending draft from before
+        // the user signed up. If yes restore it and send
+        // the user to the save prompt.
+        const draftId = localStorage.getItem("clarix_draft_id");
+
+        if (draftId) {
+          const { data: draft, error: draftError } = await supabase
+            .from("drafts")
+            .select("*")
+            .eq("session_id", draftId)
+            .single();
+
+          if (!draftError && draft) {
+            // Restore the recommendation to sessionStorage
+            // so SavePromptScreen can read it normally
+            sessionStorage.setItem("clarix_situation", draft.situation);
+            sessionStorage.setItem(
+              "clarix_recommendation",
+              JSON.stringify(draft.recommendation),
+            );
+
+            // Send user directly to save prompt
+            navigate("/save");
+            return;
+          }
+        }
+
+        // No draft — check returnTo or go home
+        const params = new URLSearchParams(window.location.search);
+        const returnTo = params.get("returnTo") || "/home";
+        navigate(returnTo);
+      } catch (err) {
+        console.error("Auth callback error:", err);
         navigate("/sign-in");
-        return;
       }
-
-      // Session is valid — send user to their destination
-      navigate(returnTo);
     };
 
     handleCallback();
@@ -56,7 +104,8 @@ export default function AuthCallbackScreen() {
       </div>
       <div
         className="w-5 h-5 border-2 border-surface-3
-                      border-t-brand-purple rounded-full animate-spin"
+                      border-t-brand-purple rounded-full
+                      animate-spin"
       />
       <p className="text-caption text-ink-30">Signing you in...</p>
     </div>
