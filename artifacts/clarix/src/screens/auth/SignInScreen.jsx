@@ -40,6 +40,9 @@ export default function SignInScreen() {
       {
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin + "/auth/callback",
+        },
       },
     );
 
