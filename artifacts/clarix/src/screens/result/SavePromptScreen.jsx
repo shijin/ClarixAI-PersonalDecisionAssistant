@@ -3,12 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useDecision } from "../../hooks/useDecision";
 import { useUser } from "../../context/UserContext";
 import { supabase } from "../../lib/supabase";
+import { storage } from "../../lib/storage";
 import { ROUTES } from "../../constants/routes";
-
-// ─────────────────────────────────────
-// Generate a random session ID for
-// anonymous draft tracking
-// ─────────────────────────────────────
 
 function generateSessionId() {
   return "draft_" + Math.random().toString(36).slice(2) + Date.now();
@@ -24,66 +20,58 @@ export default function SavePromptScreen() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
   const [savingDraft, setSavingDraft] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadRecommendation();
   }, []);
 
   const loadRecommendation = async () => {
-    // Small delay to ensure sessionStorage writes
-    // from handlePostSignIn have completed
-    await new Promise(resolve => setTimeout(resolve, 100))
+    setLoading(true);
 
-    // First try sessionStorage
-    const sit = sessionStorage.getItem('clarix_situation')
-    const rec = sessionStorage.getItem('clarix_recommendation')
+    // Try localStorage and sessionStorage via helper
+    const sit = storage.getSituation();
+    const rec = storage.getRecommendation();
 
     if (sit && rec) {
-      try {
-        setSituation(sit)
-        setRecommendation(JSON.parse(rec))
-        return
-      } catch {
-        // Fall through to draft check
-      }
+      setSituation(sit);
+      setRecommendation(rec);
+      setLoading(false);
+      return;
     }
 
-    // Check for pending draft in localStorage
-    const draftId = localStorage.getItem('clarix_draft_id')
+    // Try draft from localStorage
+    const draftId = localStorage.getItem("clarix_draft_id");
     if (draftId) {
       const { data, error } = await supabase
-        .from('drafts')
-        .select('*')
-        .eq('session_id', draftId)
-        .single()
+        .from("drafts")
+        .select("*")
+        .eq("session_id", draftId)
+        .single();
 
       if (!error && data) {
-        setSituation(data.situation)
-        setRecommendation(data.recommendation)
-        sessionStorage.setItem('clarix_situation', data.situation)
-        sessionStorage.setItem(
-          'clarix_recommendation',
-          JSON.stringify(data.recommendation)
-        )
-        return
+        setSituation(data.situation);
+        setRecommendation(data.recommendation);
+        storage.setSituation(data.situation);
+        storage.setRecommendation(data.recommendation);
+        setLoading(false);
+        return;
       }
     }
 
-    // Nothing found — go to intake
-    navigate(ROUTES.INTAKE)
+    // Nothing found
+    setLoading(false);
+    navigate(ROUTES.INTAKE);
   };
 
   const handleSave = async () => {
     if (!recommendation) return;
     setError(null);
 
-    // If user is not signed in — save a draft and redirect to sign in
     if (!user) {
       setSavingDraft(true);
-
       try {
         const sessionId = generateSessionId();
-
         const { error: draftError } = await supabase.from("drafts").insert({
           session_id: sessionId,
           situation: situation,
@@ -92,18 +80,9 @@ export default function SavePromptScreen() {
 
         if (draftError) throw draftError;
 
-        // Store the draft ID in localStorage so it survives
-        // the email verification round trip
         localStorage.setItem("clarix_draft_id", sessionId);
-
-        // Store where to return after sign in
-        localStorage.setItem("clarix_return_to", ROUTES.SAVE);
       } catch (err) {
-        // Draft failed — fall back to normal sign in flow
-        // The user will lose their recommendation but can
-        // describe their situation again
         console.error("Draft save failed:", err);
-        localStorage.setItem("clarix_return_to", ROUTES.SAVE);
       } finally {
         setSavingDraft(false);
       }
@@ -112,34 +91,43 @@ export default function SavePromptScreen() {
       return;
     }
 
-    // User is signed in — save the decision directly
     const result = await saveDecision(situation, recommendation);
 
     if (result) {
       setSaved(true);
 
-      // Clean up draft if one exists
+      // Clean up draft if exists
       const draftId = localStorage.getItem("clarix_draft_id");
       if (draftId) {
         await supabase.from("drafts").delete().eq("session_id", draftId);
         localStorage.removeItem("clarix_draft_id");
       }
 
-      // Clear sessionStorage after successful save
-      sessionStorage.removeItem("clarix_situation");
-      sessionStorage.removeItem("clarix_recommendation");
-      localStorage.removeItem("clarix_return_to");
+      storage.clearAll();
     } else {
       setError("Something went wrong. Please try again.");
     }
   };
 
-  // ── Saved confirmation state ──
+  if (loading) {
+    return (
+      <div
+        className="min-h-dvh bg-surface-1 flex items-center
+                      justify-center"
+      >
+        <div
+          className="w-5 h-5 border-2 border-surface-3
+                        border-t-brand-purple rounded-full
+                        animate-spin"
+        />
+      </div>
+    );
+  }
+
   if (saved) {
     return (
       <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
         <div className="h-12" />
-
         <div
           className="flex-1 flex flex-col items-center
                         justify-center gap-6"
@@ -162,7 +150,6 @@ export default function SavePromptScreen() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-
           <div className="text-center">
             <h1
               className="text-[26px] font-extrabold text-ink-100
@@ -175,7 +162,6 @@ export default function SavePromptScreen() {
               history.
             </p>
           </div>
-
           <div className="card w-full">
             <p className="section-label mb-2">What was saved</p>
             <div className="flex flex-col gap-2">
@@ -202,7 +188,6 @@ export default function SavePromptScreen() {
               ))}
             </div>
           </div>
-
           <div className="w-full flex flex-col gap-3">
             <button
               className="btn-primary"
@@ -222,7 +207,6 @@ export default function SavePromptScreen() {
     );
   }
 
-  // ── Default save prompt state ──
   return (
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
@@ -264,7 +248,9 @@ export default function SavePromptScreen() {
             className="text-[14px] font-semibold text-ink-100
                         leading-snug line-clamp-3"
           >
-            {recommendation.recommendation}
+            {typeof recommendation === "object"
+              ? recommendation.recommendation
+              : recommendation}
           </p>
         </div>
       )}
@@ -300,7 +286,8 @@ export default function SavePromptScreen() {
             <div key={i} className="flex items-center gap-3">
               <div
                 className="w-5 h-5 bg-brand-teal-light rounded-full
-                              flex items-center justify-center flex-shrink-0"
+                              flex items-center justify-center
+                              flex-shrink-0"
               >
                 <svg
                   width="10"
@@ -356,7 +343,8 @@ export default function SavePromptScreen() {
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 border-2 border-white
-                              border-t-transparent rounded-full animate-spin"
+                              border-t-transparent rounded-full
+                              animate-spin"
               />
               <span>Securing your recommendation...</span>
             </div>
@@ -364,7 +352,8 @@ export default function SavePromptScreen() {
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 border-2 border-white
-                              border-t-transparent rounded-full animate-spin"
+                              border-t-transparent rounded-full
+                              animate-spin"
               />
               <span>Saving...</span>
             </div>
@@ -372,7 +361,6 @@ export default function SavePromptScreen() {
             "Save this decision"
           )}
         </button>
-
         <button className="btn-ghost" onClick={() => navigate(-1)}>
           Not now
         </button>

@@ -22,37 +22,48 @@ export default function SignInScreen() {
   // go to save prompt. Otherwise go home.
   // ─────────────────────────────────────
   const handlePostSignIn = async () => {
-    const draftId = localStorage.getItem("clarix_draft_id");
+    const draftId = localStorage.getItem('clarix_draft_id')
 
     if (draftId) {
-      const { data: draft, error: draftError } = await supabase
-        .from("drafts")
-        .select("*")
-        .eq("session_id", draftId)
-        .single();
+      const { data: draft, error: draftError } =
+        await supabase
+          .from('drafts')
+          .select('*')
+          .eq('session_id', draftId)
+          .single()
 
       if (!draftError && draft) {
-        sessionStorage.setItem("clarix_situation", draft.situation);
+        // Write to both localStorage and sessionStorage
+        localStorage.setItem('clarix_situation', draft.situation)
+        localStorage.setItem(
+          'clarix_recommendation',
+          JSON.stringify(draft.recommendation)
+        )
+        sessionStorage.setItem('clarix_situation', draft.situation)
         sessionStorage.setItem(
-          "clarix_recommendation",
-          JSON.stringify(draft.recommendation),
-        );
-        navigate(ROUTES.SAVE);
-        return;
+          'clarix_recommendation',
+          JSON.stringify(draft.recommendation)
+        )
+        navigate(ROUTES.SAVE)
+        return
       }
     }
 
-    // No draft but check if situation exists in sessionStorage
-    // This covers existing users whose sessionStorage survived
-    const situation = sessionStorage.getItem("clarix_situation");
-    const recommendation = sessionStorage.getItem("clarix_recommendation");
+    // Check if situation exists in either storage
+    const situation =
+      localStorage.getItem('clarix_situation') ||
+      sessionStorage.getItem('clarix_situation')
+
+    const recommendation =
+      localStorage.getItem('clarix_recommendation') ||
+      sessionStorage.getItem('clarix_recommendation')
 
     if (situation && recommendation) {
-      navigate(ROUTES.SAVE);
-      return;
+      navigate(ROUTES.SAVE)
+      return
     }
 
-    navigate(ROUTES.HOME);
+    navigate(ROUTES.HOME)
   };
 
   const handlePasswordSignIn = async () => {
