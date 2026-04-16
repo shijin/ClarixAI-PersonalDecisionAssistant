@@ -1475,15 +1475,12 @@ export default function RecommendationScreen() {
   };
   const handleFollowUp = () => navigate(ROUTES.CONVERSATION);
   const handleSave = () => {
-    // Write to localStorage before navigating
-    // so SavePromptScreen can read it synchronously
-    if (situation) {
-      localStorage.setItem("clarix_situation", situation);
-    }
-    if (data) {
-      localStorage.setItem("clarix_recommendation", JSON.stringify(data));
-    }
-    navigate(ROUTES.SAVE);
+    localStorage.setItem('clarix_situation', situation)
+    localStorage.setItem(
+      'clarix_recommendation',
+      JSON.stringify(data)
+    )
+    navigate(ROUTES.SAVE)
   };
   const handleShare = () => navigate(ROUTES.SHARE);
   const handleDefence = () => navigate(ROUTES.DEFENCE);

@@ -95,32 +95,11 @@ function useAuthHandler() {
   }, []);
 }
 
-function AuthStateHandler() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        const sit = localStorage.getItem("clarix_situation");
-        const rec = localStorage.getItem("clarix_recommendation");
-        if (sit && rec) {
-          navigate("/save");
-        }
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  return null;
-}
 
 export default function App() {
   useAuthHandler();
   return (
     <BrowserRouter>
-      <AuthStateHandler />
       <Routes>
         {/* ── Public — no auth required ── */}
         <Route path={ROUTES.LANDING} element={<LandingScreen />} />

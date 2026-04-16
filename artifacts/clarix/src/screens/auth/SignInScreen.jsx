@@ -21,32 +21,38 @@ export default function SignInScreen() {
   // for a pending draft first. If found
   // go to save prompt. Otherwise go home.
   // ─────────────────────────────────────
-  const handlePostSignIn = async () => {
-    const draftId = localStorage.getItem('clarix_draft_id')
+    const handlePostSignIn = async () => {
+      const draftId = localStorage.getItem('clarix_draft_id')
 
-    if (draftId) {
-      const { data: draft, error: draftError } =
-        await supabase
-          .from('drafts')
-          .select('*')
-          .eq('session_id', draftId)
-          .single()
+      if (draftId) {
+        const { data: draft, error: draftError } =
+          await supabase
+            .from('drafts')
+            .select('*')
+            .eq('session_id', draftId)
+            .single()
 
-      if (!draftError && draft) {
-        // Write to both localStorage and sessionStorage
-        localStorage.setItem('clarix_situation', draft.situation)
-        localStorage.setItem(
-          'clarix_recommendation',
-          JSON.stringify(draft.recommendation)
-        )
-        sessionStorage.setItem('clarix_situation', draft.situation)
-        sessionStorage.setItem(
-          'clarix_recommendation',
-          JSON.stringify(draft.recommendation)
-        )
+        if (!draftError && draft) {
+          localStorage.setItem('clarix_situation', draft.situation)
+          localStorage.setItem(
+            'clarix_recommendation',
+            JSON.stringify(draft.recommendation)
+          )
+          localStorage.removeItem('clarix_draft_id')
+          navigate(ROUTES.SAVE)
+          return
+        }
+      }
+
+      const sit = localStorage.getItem('clarix_situation')
+      const rec = localStorage.getItem('clarix_recommendation')
+
+      if (sit && rec) {
         navigate(ROUTES.SAVE)
         return
       }
+
+      navigate(ROUTES.HOME)
     }
 
     // Check if situation exists in either storage
