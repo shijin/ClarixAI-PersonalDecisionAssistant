@@ -5,6 +5,7 @@ import { useUser } from "../../context/UserContext";
 import { supabase } from "../../lib/supabase";
 import { storage } from "../../lib/storage";
 import { ROUTES } from "../../constants/routes";
+import { useState, useEffect, useRef } from "react";
 
 function generateSessionId() {
   return "draft_" + Math.random().toString(36).slice(2) + Date.now();
@@ -22,7 +23,11 @@ export default function SavePromptScreen() {
   const [savingDraft, setSavingDraft] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const hasLoaded = useRef(false);
+
   useEffect(() => {
+    if (hasLoaded.current) return;
+    hasLoaded.current = true;
     loadRecommendation();
   }, []);
 
