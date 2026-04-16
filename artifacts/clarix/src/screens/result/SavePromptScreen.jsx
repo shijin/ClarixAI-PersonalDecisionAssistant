@@ -14,29 +14,47 @@ export default function SavePromptScreen() {
   const { user }                 = useUser()
   const { saving, saveDecision } = useDecision()
 
-  const [situation,      setSituation]      = useState(null)
-  const [recommendation, setRecommendation] = useState(null)
-  const [saved,          setSaved]          = useState(false)
-  const [error,          setError]          = useState(null)
-  const [savingDraft,    setSavingDraft]    = useState(false)
-  const [ready,          setReady]          = useState(false)
+  const [situation, setSituation] = useState(() =>
+    localStorage.getItem('clarix_situation') || null
+  )
+
+  const [recommendation, setRecommendation] = useState(() => {
+    const str = localStorage.getItem('clarix_recommendation')
+    if (!str) return null
+    try { return JSON.parse(str) } catch { return null }
+  })
+
+  const [saved,       setSaved]       = useState(false)
+  const [error,       setError]       = useState(null)
+  const [savingDraft, setSavingDraft] = useState(false)
 
   useEffect(() => {
-    // Read from localStorage only
-    const sit    = localStorage.getItem('clarix_situation')
-    const recStr = localStorage.getItem('clarix_recommendation')
-
-    if (sit && recStr) {
-      try {
-        const rec = JSON.parse(recStr)
-        setSituation(sit)
-        setRecommendation(rec)
-        setReady(true)
+    if (!situation || !recommendation) {
+      const draftId = localStorage.getItem('clarix_draft_id')
+      if (draftId) {
+        supabase
+          .from('drafts')
+          .select('*')
+          .eq('session_id', draftId)
+          .single()
+          .then(({ data, error }) => {
+            if (!error && data) {
+              localStorage.setItem('clarix_situation', data.situation)
+              localStorage.setItem(
+                'clarix_recommendation',
+                JSON.stringify(data.recommendation)
+              )
+              setSituation(data.situation)
+              setRecommendation(data.recommendation)
+            } else {
+              navigate(ROUTES.INTAKE)
+            }
+          })
         return
-      } catch {
-        // fall through to draft check
       }
+      navigate(ROUTES.INTAKE)
     }
+  }, [])
 
     // Check for draft
     const draftId = localStorage.getItem('clarix_draft_id')
