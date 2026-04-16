@@ -25,7 +25,6 @@ export default function SignInScreen() {
     const draftId = localStorage.getItem("clarix_draft_id");
 
     if (draftId) {
-      // Fetch the draft and restore to sessionStorage
       const { data: draft, error: draftError } = await supabase
         .from("drafts")
         .select("*")
@@ -38,13 +37,21 @@ export default function SignInScreen() {
           "clarix_recommendation",
           JSON.stringify(draft.recommendation),
         );
-        // Do not delete draft yet — SavePromptScreen will clean it up
         navigate(ROUTES.SAVE);
         return;
       }
     }
 
-    // No draft — go to home
+    // No draft but check if situation exists in sessionStorage
+    // This covers existing users whose sessionStorage survived
+    const situation = sessionStorage.getItem("clarix_situation");
+    const recommendation = sessionStorage.getItem("clarix_recommendation");
+
+    if (situation && recommendation) {
+      navigate(ROUTES.SAVE);
+      return;
+    }
+
     navigate(ROUTES.HOME);
   };
 
