@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDecision } from "../../hooks/useDecision";
 import { useUser } from "../../context/UserContext";
+import { supabase } from "../../lib/supabase";
 import { ROUTES } from "../../constants/routes";
+
+// ─────────────────────────────────────
+// Generate a random session ID for
+// anonymous draft tracking
+// ─────────────────────────────────────
+
+function generateSessionId() {
+  return "draft_" + Math.random().toString(36).slice(2) + Date.now();
+}
 
 export default function SavePromptScreen() {
   const navigate = useNavigate();
@@ -13,34 +23,109 @@ export default function SavePromptScreen() {
   const [recommendation, setRecommendation] = useState(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
+  const [savingDraft, setSavingDraft] = useState(false);
 
   useEffect(() => {
-    // Read situation and recommendation from sessionStorage
+    loadRecommendation();
+  }, []);
+
+  const loadRecommendation = async () => {
+    // First try sessionStorage — covers the normal signed-in flow
     const sit = sessionStorage.getItem("clarix_situation");
     const rec = sessionStorage.getItem("clarix_recommendation");
 
-    if (!sit || !rec) {
-      navigate(ROUTES.INTAKE);
-      return;
+    if (sit && rec) {
+      setSituation(sit);
+      try {
+        setRecommendation(JSON.parse(rec));
+        return;
+      } catch {
+        // Fall through to check draft
+      }
     }
 
-    setSituation(sit);
+    // sessionStorage is empty — check if there is a pending draft
+    // This covers the case where the user verified their email
+    // and came back from a different browser session
+    const draftId = localStorage.getItem("clarix_draft_id");
+    if (draftId) {
+      const { data, error } = await supabase
+        .from("drafts")
+        .select("*")
+        .eq("session_id", draftId)
+        .single();
 
-    try {
-      setRecommendation(JSON.parse(rec));
-    } catch {
-      navigate(ROUTES.INTAKE);
+      if (!error && data) {
+        setSituation(data.situation);
+        setRecommendation(data.recommendation);
+
+        // Restore to sessionStorage so the rest of the
+        // app can use it normally
+        sessionStorage.setItem("clarix_situation", data.situation);
+        sessionStorage.setItem(
+          "clarix_recommendation",
+          JSON.stringify(data.recommendation),
+        );
+        return;
+      }
     }
-  }, []);
+
+    // Nothing found — send back to intake
+    navigate(ROUTES.INTAKE);
+  };
 
   const handleSave = async () => {
     if (!recommendation) return;
     setError(null);
 
+    // If user is not signed in — save a draft and redirect to sign in
+    if (!user) {
+      setSavingDraft(true);
+
+      try {
+        const sessionId = generateSessionId();
+
+        const { error: draftError } = await supabase.from("drafts").insert({
+          session_id: sessionId,
+          situation: situation,
+          recommendation: recommendation,
+        });
+
+        if (draftError) throw draftError;
+
+        // Store the draft ID in localStorage so it survives
+        // the email verification round trip
+        localStorage.setItem("clarix_draft_id", sessionId);
+
+        // Store where to return after sign in
+        sessionStorage.setItem("clarix_return_to", ROUTES.SAVE);
+      } catch (err) {
+        // Draft failed — fall back to normal sign in flow
+        // The user will lose their recommendation but can
+        // describe their situation again
+        console.error("Draft save failed:", err);
+        sessionStorage.setItem("clarix_return_to", ROUTES.SAVE);
+      } finally {
+        setSavingDraft(false);
+      }
+
+      navigate(ROUTES.SIGN_IN);
+      return;
+    }
+
+    // User is signed in — save the decision directly
     const result = await saveDecision(situation, recommendation);
 
     if (result) {
       setSaved(true);
+
+      // Clean up draft if one exists
+      const draftId = localStorage.getItem("clarix_draft_id");
+      if (draftId) {
+        await supabase.from("drafts").delete().eq("session_id", draftId);
+        localStorage.removeItem("clarix_draft_id");
+      }
+
       // Clear sessionStorage after successful save
       sessionStorage.removeItem("clarix_situation");
       sessionStorage.removeItem("clarix_recommendation");
@@ -59,7 +144,6 @@ export default function SavePromptScreen() {
           className="flex-1 flex flex-col items-center
                         justify-center gap-6"
         >
-          {/* Success icon */}
           <div
             className="w-16 h-16 bg-brand-teal-light border
                           border-[rgba(15,110,86,0.2)] rounded-2xl
@@ -92,65 +176,33 @@ export default function SavePromptScreen() {
             </p>
           </div>
 
-          {/* What was saved */}
           <div className="card w-full">
             <p className="section-label mb-2">What was saved</p>
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <svg
-                  width="13"
-                  height="13"
-                  fill="none"
-                  stroke="#1D9E75"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <p className="text-body-sm text-ink-80">
-                  Your recommendation and full reasoning
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg
-                  width="13"
-                  height="13"
-                  fill="none"
-                  stroke="#1D9E75"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <p className="text-body-sm text-ink-80">
-                  Your situation and context
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg
-                  width="13"
-                  height="13"
-                  fill="none"
-                  stroke="#1D9E75"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <p className="text-body-sm text-ink-80">
-                  All assumptions and trade-offs
-                </p>
-              </div>
+              {[
+                "Your recommendation and full reasoning",
+                "Your situation and context",
+                "All assumptions and trade-offs",
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <svg
+                    width="13"
+                    height="13"
+                    fill="none"
+                    stroke="#1D9E75"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <p className="text-body-sm text-ink-80">{item}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* CTAs */}
           <div className="w-full flex flex-col gap-3">
             <button
               className="btn-primary"
@@ -175,7 +227,6 @@ export default function SavePromptScreen() {
     <div className="min-h-dvh bg-surface-1 flex flex-col px-5 pb-10">
       <div className="h-12" />
 
-      {/* Nav */}
       <div className="flex items-center justify-between mb-9">
         <button
           onClick={() => navigate(-1)}
@@ -202,7 +253,6 @@ export default function SavePromptScreen() {
         <div className="w-9" />
       </div>
 
-      {/* Decision preview */}
       {recommendation && (
         <div
           className="bg-brand-teal-light border
@@ -219,19 +269,25 @@ export default function SavePromptScreen() {
         </div>
       )}
 
-      {/* Heading */}
       <h1
         className="text-[22px] font-extrabold text-ink-100
                      tracking-tight leading-snug mb-2"
       >
         Save and come back anytime
       </h1>
-      <p className="text-body-sm text-ink-50 leading-relaxed mb-6">
-        Signed in as{" "}
-        <span className="font-semibold text-ink-100">{user?.email}</span>
-      </p>
 
-      {/* What gets saved */}
+      {user ? (
+        <p className="text-body-sm text-ink-50 leading-relaxed mb-6">
+          Signed in as{" "}
+          <span className="font-semibold text-ink-100">{user.email}</span>
+        </p>
+      ) : (
+        <p className="text-body-sm text-ink-50 leading-relaxed mb-6">
+          We will save your recommendation securely. Sign in or create a free
+          account to continue.
+        </p>
+      )}
+
       <div className="card mb-6">
         <p className="section-label mb-3">What gets saved</p>
         <div className="flex flex-col gap-3">
@@ -265,7 +321,6 @@ export default function SavePromptScreen() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div
           className="flex items-start gap-2 px-4 py-3
@@ -291,14 +346,21 @@ export default function SavePromptScreen() {
         </div>
       )}
 
-      {/* CTAs */}
       <div className="flex flex-col gap-3 mt-auto">
         <button
           className="btn-primary"
           onClick={handleSave}
-          disabled={saving || !recommendation}
+          disabled={saving || savingDraft || !recommendation}
         >
-          {saving ? (
+          {savingDraft ? (
+            <div className="flex items-center gap-2">
+              <div
+                className="w-4 h-4 border-2 border-white
+                              border-t-transparent rounded-full animate-spin"
+              />
+              <span>Securing your recommendation...</span>
+            </div>
+          ) : saving ? (
             <div className="flex items-center gap-2">
               <div
                 className="w-4 h-4 border-2 border-white
