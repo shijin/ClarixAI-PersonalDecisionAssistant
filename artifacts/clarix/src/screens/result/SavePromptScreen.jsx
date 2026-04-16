@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useNavigate }          from 'react-router-dom'
-import { useDecision }          from '../../hooks/useDecision'
-import { useUser }              from '../../context/UserContext'
-import { supabase }             from '../../lib/supabase'
-import { ROUTES }               from '../../constants/routes'
+import { useState, useEffect }  from 'react'
+import { useNavigate }           from 'react-router-dom'
+import { useDecision }           from '../../hooks/useDecision'
+import { useUser }               from '../../context/UserContext'
+import { supabase }              from '../../lib/supabase'
+import { ROUTES }                from '../../constants/routes'
 
 function generateSessionId() {
   return 'draft_' + Math.random().toString(36).slice(2) + Date.now()
@@ -56,35 +56,6 @@ export default function SavePromptScreen() {
     }
   }, [])
 
-    // Check for draft
-    const draftId = localStorage.getItem('clarix_draft_id')
-    if (draftId) {
-      supabase
-        .from('drafts')
-        .select('*')
-        .eq('session_id', draftId)
-        .single()
-        .then(({ data, error }) => {
-          if (!error && data) {
-            localStorage.setItem('clarix_situation', data.situation)
-            localStorage.setItem(
-              'clarix_recommendation',
-              JSON.stringify(data.recommendation)
-            )
-            setSituation(data.situation)
-            setRecommendation(data.recommendation)
-            setReady(true)
-          } else {
-            navigate(ROUTES.INTAKE)
-          }
-        })
-      return
-    }
-
-    // Nothing found
-    navigate(ROUTES.INTAKE)
-  }, [])
-
   const handleSave = async () => {
     if (!recommendation) return
     setError(null)
@@ -134,18 +105,6 @@ export default function SavePromptScreen() {
     } else {
       setError('Something went wrong. Please try again.')
     }
-  }
-
-  // Show nothing while loading
-  if (!ready) {
-    return (
-      <div className="min-h-dvh bg-surface-1 flex items-center
-                      justify-center">
-        <div className="w-5 h-5 border-2 border-surface-3
-                        border-t-brand-purple rounded-full
-                        animate-spin" />
-      </div>
-    )
   }
 
   if (saved) {
