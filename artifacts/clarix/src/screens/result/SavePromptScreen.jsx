@@ -1,13 +1,36 @@
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDecision } from "../../hooks/useDecision";
 import { useUser } from "../../context/UserContext";
 import { supabase } from "../../lib/supabase";
-import { storage } from "../../lib/storage";
 import { ROUTES } from "../../constants/routes";
-import { useState, useEffect, useRef } from "react";
 
 function generateSessionId() {
   return "draft_" + Math.random().toString(36).slice(2) + Date.now();
+}
+
+function getStoredData() {
+  // Read synchronously from both storages
+  const sit =
+    localStorage.getItem("clarix_situation") ||
+    sessionStorage.getItem("clarix_situation") ||
+    null;
+
+  const recStr =
+    localStorage.getItem("clarix_recommendation") ||
+    sessionStorage.getItem("clarix_recommendation") ||
+    null;
+
+  let rec = null;
+  if (recStr) {
+    try {
+      rec = JSON.parse(recStr);
+    } catch {
+      rec = null;
+    }
+  }
+
+  return { sit, rec };
 }
 
 export default function SavePromptScreen() {
@@ -15,58 +38,22 @@ export default function SavePromptScreen() {
   const { user } = useUser();
   const { saving, saveDecision } = useDecision();
 
-  const [situation, setSituation] = useState("");
-  const [recommendation, setRecommendation] = useState(null);
+  // Read data synchronously on first render only
+  // useRef ensures this never changes on re-renders
+  const storedData = useRef(getStoredData());
+  const situation = storedData.current.sit;
+  const initRec = storedData.current.rec;
+
+  const [recommendation, setRecommendation] = useState(initRec);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
   const [savingDraft, setSavingDraft] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  const hasLoaded = useRef(false);
-
-  useEffect(() => {
-    if (hasLoaded.current) return;
-    hasLoaded.current = true;
-    loadRecommendation();
-  }, []);
-
-  const loadRecommendation = async () => {
-    setLoading(true);
-
-    // Try localStorage and sessionStorage via helper
-    const sit = storage.getSituation();
-    const rec = storage.getRecommendation();
-
-    if (sit && rec) {
-      setSituation(sit);
-      setRecommendation(rec);
-      setLoading(false);
-      return;
-    }
-
-    // Try draft from localStorage
-    const draftId = localStorage.getItem("clarix_draft_id");
-    if (draftId) {
-      const { data, error } = await supabase
-        .from("drafts")
-        .select("*")
-        .eq("session_id", draftId)
-        .single();
-
-      if (!error && data) {
-        setSituation(data.situation);
-        setRecommendation(data.recommendation);
-        storage.setSituation(data.situation);
-        storage.setRecommendation(data.recommendation);
-        setLoading(false);
-        return;
-      }
-    }
-
-    // Nothing found
-    setLoading(false);
+  // If no data at all redirect to intake
+  if (!situation || !recommendation) {
     navigate(ROUTES.INTAKE);
-  };
+    return null;
+  }
 
   const handleSave = async () => {
     if (!recommendation) return;
@@ -100,33 +87,20 @@ export default function SavePromptScreen() {
     if (result) {
       setSaved(true);
 
-      // Clean up draft if exists
       const draftId = localStorage.getItem("clarix_draft_id");
       if (draftId) {
         await supabase.from("drafts").delete().eq("session_id", draftId);
         localStorage.removeItem("clarix_draft_id");
       }
 
-      storage.clearAll();
+      localStorage.removeItem("clarix_situation");
+      localStorage.removeItem("clarix_recommendation");
+      sessionStorage.removeItem("clarix_situation");
+      sessionStorage.removeItem("clarix_recommendation");
     } else {
       setError("Something went wrong. Please try again.");
     }
   };
-
-  if (loading) {
-    return (
-      <div
-        className="min-h-dvh bg-surface-1 flex items-center
-                      justify-center"
-      >
-        <div
-          className="w-5 h-5 border-2 border-surface-3
-                        border-t-brand-purple rounded-full
-                        animate-spin"
-        />
-      </div>
-    );
-  }
 
   if (saved) {
     return (
@@ -252,9 +226,7 @@ export default function SavePromptScreen() {
             className="text-[14px] font-semibold text-ink-100
                         leading-snug line-clamp-3"
           >
-            {typeof recommendation === "object"
-              ? recommendation.recommendation
-              : recommendation}
+            {recommendation.recommendation}
           </p>
         </div>
       )}
