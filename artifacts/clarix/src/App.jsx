@@ -41,7 +41,61 @@ import ErrorScreen from "./screens/utility/ErrorScreen";
 import EmptyStateScreen from "./screens/utility/EmptyStateScreen";
 import UpgradeScreen from "./screens/utility/UpgradeScreen";
 
+import { useEffect } from "react";
+import { supabase } from "./lib/supabase";
+
+// ─────────────────────────────────────
+// Global auth handler
+// Runs on every page load and checks
+// for Supabase tokens in the URL hash
+// This handles email verification redirects
+// ─────────────────────────────────────
+
+function useAuthHandler() {
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        // Check for pending draft
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId =
+          urlParams.get("draft") || localStorage.getItem("clarix_draft_id");
+
+        if (draftId) {
+          const { data: draft, error } = await supabase
+            .from("drafts")
+            .select("*")
+            .eq("session_id", draftId)
+            .single();
+
+          if (!error && draft) {
+            sessionStorage.setItem("clarix_situation", draft.situation);
+            sessionStorage.setItem(
+              "clarix_recommendation",
+              JSON.stringify(draft.recommendation),
+            );
+            localStorage.removeItem("clarix_draft_id");
+
+            // Navigate to save prompt
+            window.location.href = "/save";
+            return;
+          }
+        }
+
+        // No draft — if we are on the landing page go to home
+        if (window.location.pathname === "/") {
+          window.location.href = "/home";
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+}
+
 export default function App() {
+  useAuthHandler();
   return (
     <BrowserRouter>
       <Routes>

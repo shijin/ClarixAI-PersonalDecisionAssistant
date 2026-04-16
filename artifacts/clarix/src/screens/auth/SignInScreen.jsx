@@ -39,8 +39,8 @@ export default function SignInScreen() {
     const draftId = localStorage.getItem("clarix_draft_id");
 
     const redirectUrl = draftId
-      ? window.location.origin + "/auth/callback?draft=" + draftId
-      : window.location.origin + "/auth/callback";
+      ? window.location.origin + "/?draft=" + draftId
+      : window.location.origin;
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
       {
