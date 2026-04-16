@@ -1,46 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 
 export default function AuthCallbackScreen() {
   const navigate = useNavigate();
+  const [message, setMessage] = useState("Signing you in...");
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Process the hash tokens from Supabase verification email
-        const hashParams = new URLSearchParams(
-          window.location.hash.substring(1),
-        );
-        const accessToken = hashParams.get("access_token");
-        const refreshToken = hashParams.get("refresh_token");
+        setMessage("Signing you in...");
 
-        if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+        // Give Supabase time to process the URL hash
+        // and establish the session automatically
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-          if (error) {
-            console.error("Session error:", error);
+        // Check if session was established
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error || !session) {
+          console.error("No session after callback:", error);
+          // Try one more time after another delay
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          const {
+            data: { session: retrySession },
+          } = await supabase.auth.getSession();
+
+          if (!retrySession) {
             navigate("/sign-in");
             return;
           }
         }
 
-        // Verify session is valid
-        const { data } = await supabase.auth.getSession();
+        setMessage("Almost there...");
 
-        if (!data?.session) {
-          navigate("/sign-in");
-          return;
-        }
-
-        // ── Draft check ──
-        // Read draft ID from URL query parameter first
-        // This is more reliable than localStorage because
-        // it works even when the verification link opens
-        // in a different browser or tab
+        // Read draft ID from URL query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const draftId =
           urlParams.get("draft") || localStorage.getItem("clarix_draft_id");
@@ -53,32 +50,70 @@ export default function AuthCallbackScreen() {
             .single();
 
           if (!draftError && draft) {
-            // Restore the recommendation to sessionStorage
+            // Restore recommendation to sessionStorage
             sessionStorage.setItem("clarix_situation", draft.situation);
             sessionStorage.setItem(
               "clarix_recommendation",
               JSON.stringify(draft.recommendation),
             );
 
-            // Clean up the draft ID from localStorage
+            // Clean up
             localStorage.removeItem("clarix_draft_id");
 
-            // Send user directly to save prompt
+            setMessage("Loading your recommendation...");
             navigate("/save");
             return;
           }
         }
 
-        // No draft — go to returnTo or home
-        const returnTo = urlParams.get("returnTo") || "/home";
-        navigate(returnTo);
+        // No draft — go home
+        navigate("/home");
       } catch (err) {
         console.error("Auth callback error:", err);
         navigate("/sign-in");
       }
     };
 
+    // Listen for auth state changes as a backup
+    // This fires when Supabase auto-processes the URL hash
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        subscription.unsubscribe();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId =
+          urlParams.get("draft") || localStorage.getItem("clarix_draft_id");
+
+        if (draftId) {
+          const { data: draft, error: draftError } = await supabase
+            .from("drafts")
+            .select("*")
+            .eq("session_id", draftId)
+            .single();
+
+          if (!draftError && draft) {
+            sessionStorage.setItem("clarix_situation", draft.situation);
+            sessionStorage.setItem(
+              "clarix_recommendation",
+              JSON.stringify(draft.recommendation),
+            );
+            localStorage.removeItem("clarix_draft_id");
+            navigate("/save");
+            return;
+          }
+        }
+
+        navigate("/home");
+      }
+    });
+
     handleCallback();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
@@ -111,7 +146,7 @@ export default function AuthCallbackScreen() {
                       border-t-brand-purple rounded-full
                       animate-spin"
       />
-      <p className="text-caption text-ink-30">Signing you in...</p>
+      <p className="text-caption text-ink-30">{message}</p>
     </div>
   );
 }
