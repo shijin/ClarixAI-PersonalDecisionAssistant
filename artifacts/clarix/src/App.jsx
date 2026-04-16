@@ -76,14 +76,7 @@ export default function App() {
         <Route path={ROUTES.TRADEOFF} element={<TradeoffDetailScreen />} />
 
         {/* ── Save and share — protected ── */}
-        <Route
-          path={ROUTES.SAVE}
-          element={
-            <ProtectedRoute>
-              <SavePromptScreen />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={ROUTES.SAVE} element={<SavePromptScreen />} />
         <Route
           path={ROUTES.SHARE}
           element={
