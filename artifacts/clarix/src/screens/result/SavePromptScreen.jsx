@@ -30,48 +30,47 @@ export default function SavePromptScreen() {
   }, []);
 
   const loadRecommendation = async () => {
-    // First try sessionStorage — covers the normal signed-in flow
-    const sit = sessionStorage.getItem("clarix_situation");
-    const rec = sessionStorage.getItem("clarix_recommendation");
+    // Small delay to ensure sessionStorage writes
+    // from handlePostSignIn have completed
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // First try sessionStorage
+    const sit = sessionStorage.getItem('clarix_situation')
+    const rec = sessionStorage.getItem('clarix_recommendation')
 
     if (sit && rec) {
-      setSituation(sit);
       try {
-        setRecommendation(JSON.parse(rec));
-        return;
+        setSituation(sit)
+        setRecommendation(JSON.parse(rec))
+        return
       } catch {
-        // Fall through to check draft
+        // Fall through to draft check
       }
     }
 
-    // sessionStorage is empty — check if there is a pending draft
-    // This covers the case where the user verified their email
-    // and came back from a different browser session
-    const draftId = localStorage.getItem("clarix_draft_id");
+    // Check for pending draft in localStorage
+    const draftId = localStorage.getItem('clarix_draft_id')
     if (draftId) {
       const { data, error } = await supabase
-        .from("drafts")
-        .select("*")
-        .eq("session_id", draftId)
-        .single();
+        .from('drafts')
+        .select('*')
+        .eq('session_id', draftId)
+        .single()
 
       if (!error && data) {
-        setSituation(data.situation);
-        setRecommendation(data.recommendation);
-
-        // Restore to sessionStorage so the rest of the
-        // app can use it normally
-        sessionStorage.setItem("clarix_situation", data.situation);
+        setSituation(data.situation)
+        setRecommendation(data.recommendation)
+        sessionStorage.setItem('clarix_situation', data.situation)
         sessionStorage.setItem(
-          "clarix_recommendation",
-          JSON.stringify(data.recommendation),
-        );
-        return;
+          'clarix_recommendation',
+          JSON.stringify(data.recommendation)
+        )
+        return
       }
     }
 
-    // Nothing found — send back to intake
-    navigate(ROUTES.INTAKE);
+    // Nothing found — go to intake
+    navigate(ROUTES.INTAKE)
   };
 
   const handleSave = async () => {
