@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDecision } from "../../hooks/useDecision";
 import { useUser } from "../../context/UserContext";
