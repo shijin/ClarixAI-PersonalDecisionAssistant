@@ -761,107 +761,96 @@ const PLATFORM_MAP = {
   ],
 };
 
-  function detectPlatformType(situation) {
-    const lower = situation.toLowerCase()
+function detectPlatformType(situation) {
+  const lower = situation.toLowerCase();
 
-    const scores = {
-      insurance:  0,
-      investment: 0,
-      career:     0,
-      housing:    0,
-      purchase:   0,
-    }
+  // Score each category by keyword matches
+  const scores = {
+    insurance: 0,
+    investment: 0,
+    career: 0,
+    housing: 0,
+    purchase: 0,
+  };
 
-    // Insurance keywords
-    if (lower.includes('term insurance'))    scores.insurance += 3
-    if (lower.includes('term plan'))         scores.insurance += 3
-    if (lower.includes('life insurance'))    scores.insurance += 3
-    if (lower.includes('health insurance'))  scores.insurance += 3
-    if (lower.includes('buy insurance'))     scores.insurance += 2
-    if (lower.includes('which insurance'))   scores.insurance += 2
-    if (lower.includes('cover i need'))      scores.insurance += 2
-    if (lower.includes('insurance'))         scores.insurance += 1
+  // Insurance keywords
+  if (lower.includes("term insurance")) scores.insurance += 3;
+  if (lower.includes("term plan")) scores.insurance += 3;
+  if (lower.includes("life insurance")) scores.insurance += 3;
+  if (lower.includes("health insurance")) scores.insurance += 3;
+  if (lower.includes("buy insurance")) scores.insurance += 2;
+  if (lower.includes("which insurance")) scores.insurance += 2;
+  if (lower.includes("cover i need")) scores.insurance += 2;
+  if (lower.includes("policybazaar")) scores.insurance += 2;
+  if (lower.includes("insurance")) scores.insurance += 1;
 
-    // Investment keywords
-    if (lower.includes('invest'))            scores.investment += 2
-    if (lower.includes('sip'))               scores.investment += 3
-    if (lower.includes('mutual fund'))       scores.investment += 3
-    if (lower.includes('stock market'))      scores.investment += 3
-    if (lower.includes('fixed deposit'))     scores.investment += 2
-    if (lower.includes('build wealth'))      scores.investment += 2
-    if (lower.includes('start investing'))   scores.investment += 3
-    if (lower.includes('where to invest'))   scores.investment += 3
-    if (lower.includes('portfolio'))         scores.investment += 2
-    if (lower.includes('fd'))                scores.investment += 2
-    if (lower.includes('groww'))             scores.investment += 3
-    if (lower.includes('zerodha'))           scores.investment += 3
+  // Investment keywords
+  if (lower.includes("invest")) scores.investment += 2;
+  if (lower.includes("sip")) scores.investment += 3;
+  if (lower.includes("mutual fund")) scores.investment += 3;
+  if (lower.includes("stock market")) scores.investment += 3;
+  if (lower.includes("fixed deposit")) scores.investment += 2;
+  if (lower.includes("build wealth")) scores.investment += 2;
+  if (lower.includes("start investing")) scores.investment += 3;
+  if (lower.includes("where to invest")) scores.investment += 3;
+  if (lower.includes("portfolio")) scores.investment += 2;
+  if (lower.includes('fd')) scores.investment += 2;
+  if (lower.includes('groww')) scores.investment += 3;
+  if (lower.includes('zerodha')) scores.investment += 3;
 
-    // Career keywords
-    if (lower.includes('job offer'))         scores.career += 3
-    if (lower.includes('new job'))           scores.career += 3
-    if (lower.includes('should i take'))     scores.career += 2
-    if (lower.includes('esop'))              scores.career += 3
-    if (lower.includes('switch'))            scores.career += 2
-    if (lower.includes('resign'))            scores.career += 2
-    if (lower.includes('career'))            scores.career += 2
-    if (lower.includes('salary hike'))       scores.career += 2
-    if (lower.includes('promotion'))         scores.career += 2
-    if (lower.includes('offer letter'))      scores.career += 3
-    if (lower.includes('joining'))           scores.career += 2
+  // Career keywords
+  if (lower.includes("job offer")) scores.career += 3;
+  if (lower.includes("new job")) scores.career += 3;
+  if (lower.includes("should i take")) scores.career += 2;
+  if (lower.includes("esop")) scores.career += 3;
+  if (lower.includes("switch")) scores.career += 2;
+  if (lower.includes("resign")) scores.career += 2;
+  if (lower.includes("career")) scores.career += 2;
+  if (lower.includes("salary hike")) scores.career += 2;
+  if (lower.includes("promotion")) scores.career += 2;
+  if (lower.includes('offer letter')) scores.career += 3;
+  if (lower.includes('joining')) scores.career += 2;
 
-    // Housing keywords
-    if (lower.includes('buy a flat'))        scores.housing += 3
-    if (lower.includes('buy a house'))       scores.housing += 3
-    if (lower.includes('buy flat'))          scores.housing += 3
-    if (lower.includes('buy house'))         scores.housing += 3
-    if (lower.includes('rent or buy'))       scores.housing += 3
-    if (lower.includes('renting'))           scores.housing += 2
-    if (lower.includes('home loan'))         scores.housing += 3
-    if (lower.includes('property'))          scores.housing += 2
-    if (lower.includes('real estate'))       scores.housing += 2
-    if (lower.includes('flat'))              scores.housing += 2
-    if (lower.includes('apartment'))         scores.housing += 2
-    if (lower.includes('2bhk'))              scores.housing += 3
-    if (lower.includes('3bhk'))              scores.housing += 3
-    if (lower.includes('nobroker'))          scores.housing += 3
-    if (lower.includes('magicbricks'))       scores.housing += 3
-    if (lower.includes('continue renting'))  scores.housing += 3
-    if (lower.includes('buy now'))           scores.housing += 2
+  // Housing keywords
+  if (lower.includes('buy a flat')) scores.housing += 3
+  if (lower.includes('buy a house')) scores.housing += 3
+  if (lower.includes('buy flat')) scores.housing += 3
+  if (lower.includes('buy house')) scores.housing += 3
+  if (lower.includes('rent or buy')) scores.housing += 3
+  if (lower.includes('renting')) scores.housing += 2
+  if (lower.includes('home loan')) scores.housing += 3
+  if (lower.includes('property')) scores.housing += 2
+  if (lower.includes('real estate')) scores.housing += 2
+  if (lower.includes('flat')) scores.housing += 2
+  if (lower.includes('apartment')) scores.housing += 2
+  if (lower.includes('2bhk')) scores.housing += 3
+  if (lower.includes('3bhk')) scores.housing += 3
+  if (lower.includes('nobroker')) scores.housing += 3
+  if (lower.includes('magicbricks')) scores.housing += 3
+  if (lower.includes('continue renting')) scores.housing += 3
+  if (lower.includes('buy now')) scores.housing += 2
 
-    // Purchase keywords
-    if (lower.includes('buy a laptop'))      scores.purchase += 3
-    if (lower.includes('buy a phone'))       scores.purchase += 3
-    if (lower.includes('which laptop'))      scores.purchase += 3
-    if (lower.includes('which phone'))       scores.purchase += 3
-    if (lower.includes('best laptop'))       scores.purchase += 3
-    if (lower.includes('best phone'))        scores.purchase += 3
-    if (lower.includes('macbook'))           scores.purchase += 3
-    if (lower.includes('iphone'))            scores.purchase += 3
-    if (lower.includes('samsung'))           scores.purchase += 2
-    if (lower.includes('dell'))              scores.purchase += 2
-    if (lower.includes('lenovo'))            scores.purchase += 2
-    if (lower.includes('laptop'))            scores.purchase += 2
-    if (lower.includes('phone'))             scores.purchase += 1
-    if (lower.includes('gadget'))            scores.purchase += 2
-    if (lower.includes('device'))            scores.purchase += 2
-    if (lower.includes('amazon'))            scores.purchase += 2
-    if (lower.includes('flipkart'))          scores.purchase += 2
-    if (lower.includes('budget is'))         scores.purchase += 1
-    if (lower.includes('video editing'))     scores.purchase += 2
-    if (lower.includes('gaming'))            scores.purchase += 2
-
-    // Find highest scoring category
-    const topCategory = Object.entries(scores).reduce(
-      (best, [category, score]) =>
-        score > best.score ? { category, score } : best,
-      { category: null, score: 0 }
-    )
-
-    // Only return if meaningful score
-    if (topCategory.score < 2) return null
-
-    return topCategory.category
-  }
+  // Purchase keywords
+  if (lower.includes('buy a laptop')) scores.purchase += 3
+  if (lower.includes('buy a phone')) scores.purchase += 3
+  if (lower.includes('which laptop')) scores.purchase += 3
+  if (lower.includes('which phone')) scores.purchase += 3
+  if (lower.includes('best laptop')) scores.purchase += 3
+  if (lower.includes('best phone')) scores.purchase += 3
+  if (lower.includes('macbook')) scores.purchase += 3
+  if (lower.includes('iphone')) scores.purchase += 3
+  if (lower.includes('samsung')) scores.purchase += 2
+  if (lower.includes('dell')) scores.purchase += 2
+  if (lower.includes('lenovo')) scores.purchase += 2
+  if (lower.includes('laptop')) scores.purchase += 2
+  if (lower.includes('phone')) scores.purchase += 1
+  if (lower.includes('gadget')) scores.purchase += 2
+  if (lower.includes('device')) scores.purchase += 2
+  if (lower.includes('amazon')) scores.purchase += 2
+  if (lower.includes('flipkart')) scores.purchase += 2
+  if (lower.includes('budget is')) scores.purchase += 1
+  if (lower.includes('video editing')) scores.purchase += 2
+  if (lower.includes('gaming')) scores.purchase += 2
 
   // Find the category with the highest score
   const topCategory = Object.entries(scores).reduce(
