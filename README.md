@@ -4,7 +4,7 @@
 
 Clarix is an AI-powered personal decision assistant that helps Indians make confident financial and career decisions without the noise of generic advice. Describe your situation in plain language and get a clear, reasoned recommendation built around your specific income, goals, and constraints — in under 15 seconds.
 
-**Live Product:** [clarix-ai-personal-decision-assista.vercel.app](https://clarix-ai-personal-decision-assista.vercel.app)
+**Live Product:** [Link](https://clarix-ai-personal-decision-assista.vercel.app)  
 **Video Walkthrough:**
 
 ---
