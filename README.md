@@ -181,10 +181,10 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in `artifacts/clarix/` with these variables:
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_CLAUDE_API_KEY=your_anthropic_api_key
+Create a `.env` file in `artifacts/clarix/` with these variables:  
+VITE_SUPABASE_URL=your_supabase_project_url  
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key  
+VITE_CLAUDE_API_KEY=your_anthropic_api_key  
 
 ### Run locally
 
@@ -338,10 +338,10 @@ Built by **Shijin Ramesh** as a 0 to 1 product management portfolio project — 
 
 ## Contact
 
-Shijin Ramesh  
-[Email ID](kshijin92@gmail.com)
-For questions, feedback, or collaboration reach out via LinkedIn or open an issue on this repository.
-[LinkedIn](https://www.linkedin.com/in/shijinramesh/) | [Portfolio](https://www.shijinramesh.co.in/)
+Shijin Ramesh    
+[Email ID](kshijin92@gmail.com)  
+For questions, feedback, or collaboration reach out via LinkedIn or open an issue on this repository.  
+[LinkedIn](https://www.linkedin.com/in/shijinramesh/) | [Portfolio](https://www.shijinramesh.co.in/)  
 
 ---
 
