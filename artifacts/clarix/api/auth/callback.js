@@ -12,13 +12,25 @@ export default async function handler(req) {
   const baseUrl = url.origin
 
   if (!token || !type) {
-    return Response.redirect(baseUrl + '/sign-in', 302)
+    return Response.redirect(
+      baseUrl + '/sign-in?error=no_token', 302
+    )
+  }
+
+  // Check environment variables are present
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceKey) {
+    return Response.redirect(
+      baseUrl + '/sign-in?error=missing_env_vars', 302
+    )
   }
 
   try {
     const supabase = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      supabaseUrl,
+      serviceKey,
       {
         auth: {
           autoRefreshToken:   false,
@@ -28,20 +40,25 @@ export default async function handler(req) {
       }
     )
 
-    // Verify the token using OTP verification
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash: token,
       type:       type,
     })
 
-    if (error || !data.session) {
-      console.error('OTP verification error:', error)
-      return Response.redirect(baseUrl + '/sign-in', 302)
+    if (error) {
+      return Response.redirect(
+        baseUrl + '/sign-in?error=' +
+        encodeURIComponent(error.message), 302
+      )
     }
 
-    const session = data.session
+    if (!data.session) {
+      return Response.redirect(
+        baseUrl + '/sign-in?error=no_session', 302
+      )
+    }
 
-    // Check for pending draft
+    // Success — check for draft
     let draftData = null
 
     if (draftId) {
@@ -57,7 +74,6 @@ export default async function handler(req) {
       }
     }
 
-    // Decide where to redirect
     const redirectTo = draftData
       ? baseUrl + '/save'
       : baseUrl + '/home'
@@ -68,7 +84,6 @@ export default async function handler(req) {
     const headers = new Headers()
     headers.append('Location', redirectTo)
 
-    // Set draft cookies if draft exists
     if (draftData) {
       headers.append(
         'Set-Cookie',
@@ -86,16 +101,14 @@ export default async function handler(req) {
       )
     }
 
-    // Set session cookies so Supabase client
-    // picks up the session on the next page load
     headers.append(
       'Set-Cookie',
-      'sb-access-token=' + session.access_token +
+      'sb-access-token=' + data.session.access_token +
       '; ' + cookieOptions
     )
     headers.append(
       'Set-Cookie',
-      'sb-refresh-token=' + session.refresh_token +
+      'sb-refresh-token=' + data.session.refresh_token +
       '; ' + cookieOptions
     )
 
@@ -105,7 +118,9 @@ export default async function handler(req) {
     })
 
   } catch (err) {
-    console.error('Auth callback error:', err)
-    return Response.redirect(baseUrl + '/sign-in', 302)
+    return Response.redirect(
+      baseUrl + '/sign-in?error=' +
+      encodeURIComponent(err.message || 'unknown'), 302
+    )
   }
 }
