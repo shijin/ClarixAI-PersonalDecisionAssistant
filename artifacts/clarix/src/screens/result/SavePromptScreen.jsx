@@ -5,6 +5,34 @@ import { useUser } from "../../context/UserContext";
 import { supabase } from "../../lib/supabase";
 import { ROUTES } from "../../constants/routes";
 
+function getDraftFromCookies() {
+  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+    const [key, val] = cookie.trim().split('=')
+    acc[key] = val
+    return acc
+  }, {})
+
+  const sit = cookies['clarix_draft_situation']
+    ? decodeURIComponent(cookies['clarix_draft_situation'])
+    : null
+
+  const recStr = cookies['clarix_draft_recommendation']
+    ? decodeURIComponent(cookies['clarix_draft_recommendation'])
+    : null
+
+  let rec = null
+  if (recStr) {
+    try { rec = JSON.parse(recStr) } catch { rec = null }
+  }
+
+  return { sit, rec }
+}
+
+function clearDraftCookies() {
+  document.cookie = 'clarix_draft_situation=; Path=/; Max-Age=0'
+  document.cookie = 'clarix_draft_recommendation=; Path=/; Max-Age=0'
+}
+
 function generateSessionId() {
   return "draft_" + Math.random().toString(36).slice(2) + Date.now();
 }
@@ -14,18 +42,22 @@ export default function SavePromptScreen() {
   const { user } = useUser();
   const { saving, saveDecision } = useDecision();
 
-  const [situation, setSituation] = useState(
-    () => localStorage.getItem("clarix_situation") || null,
-  );
+  const [situation, setSituation] = useState(() => {
+    // Check cookies first (set by Edge Function after verification)
+    const { sit } = getDraftFromCookies()
+    if (sit) return sit
+    // Fall back to localStorage
+    return localStorage.getItem('clarix_situation') || null
+  })
 
   const [recommendation, setRecommendation] = useState(() => {
-    const str = localStorage.getItem("clarix_recommendation");
-    if (!str) return null;
-    try {
-      return JSON.parse(str);
-    } catch {
-      return null;
-    }
+    // Check cookies first
+    const { rec } = getDraftFromCookies()
+    if (rec) return rec
+    // Fall back to localStorage
+    const str = localStorage.getItem('clarix_recommendation')
+    if (!str) return null
+    try { return JSON.parse(str) } catch { return null }
   });
 
   const [saved, setSaved] = useState(false);
@@ -97,7 +129,8 @@ export default function SavePromptScreen() {
     const result = await saveDecision(situation, recommendation);
 
     if (result) {
-      setSaved(true);
+      setSaved(true)
+      clearDraftCookies()
 
       const draftId = localStorage.getItem("clarix_draft_id");
       if (draftId) {

@@ -73,10 +73,12 @@ export default function SignInScreen() {
       signInError?.message?.includes("Invalid login credentials") ||
       signInError?.message?.includes("Email not confirmed")
     ) {
-      const draftId = localStorage.getItem("clarix_draft_id");
-      const redirectUrl = draftId
-        ? window.location.origin + "/?draft=" + draftId
-        : window.location.origin;
+      const draftId = localStorage.getItem('clarix_draft_id')
+
+      const redirectUrl =
+        window.location.origin +
+        '/api/auth/callback' +
+        (draftId ? '?draft=' + draftId : '')
 
       const { data: signUpData, error: signUpError } =
         await supabase.auth.signUp({
@@ -85,7 +87,7 @@ export default function SignInScreen() {
           options: {
             emailRedirectTo: redirectUrl,
           },
-        });
+        })
 
       if (signUpError) {
         setError(signUpError.message);
