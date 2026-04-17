@@ -5,22 +5,17 @@ export const config = {
 }
 
 export default async function handler(req) {
-  const url = new URL(req.url)
+  const url     = new URL(req.url)
+  const token   = url.searchParams.get('token')
+  const type    = url.searchParams.get('type')
+  const draftId = url.searchParams.get('draft')
+  const baseUrl = url.origin
 
-  // Get the code from the URL query parameter
-  // Supabase sends ?code=xxx for PKCE flow
-  const code     = url.searchParams.get('code')
-  const draftId  = url.searchParams.get('draft')
-  const baseUrl  = url.origin
-
-  if (!code) {
-    // No code — redirect to sign in
+  if (!token || !type) {
     return Response.redirect(baseUrl + '/sign-in', 302)
   }
 
   try {
-    // Create Supabase client with service role key
-    // This runs server-side only — never exposed to browser
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -33,13 +28,18 @@ export default async function handler(req) {
       }
     )
 
-    // Exchange the code for a session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    // Verify the token using OTP verification
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: token,
+      type:       type,
+    })
 
     if (error || !data.session) {
-      console.error('Session exchange error:', error)
+      console.error('OTP verification error:', error)
       return Response.redirect(baseUrl + '/sign-in', 302)
     }
+
+    const session = data.session
 
     // Check for pending draft
     let draftData = null
@@ -57,17 +57,19 @@ export default async function handler(req) {
       }
     }
 
-    // Build the redirect URL
-    const redirectTo = draftData ? baseUrl + '/save' : baseUrl + '/home'
+    // Decide where to redirect
+    const redirectTo = draftData
+      ? baseUrl + '/save'
+      : baseUrl + '/home'
 
-    // Set the session tokens and draft data as cookies
-    const cookieOptions = 'Path=/; HttpOnly=false; SameSite=Lax; Max-Age=3600'
+    const cookieOptions =
+      'Path=/; HttpOnly=false; SameSite=Lax; Max-Age=3600'
 
     const headers = new Headers()
     headers.append('Location', redirectTo)
 
+    // Set draft cookies if draft exists
     if (draftData) {
-      // Store draft in cookie so SavePromptScreen can read it
       headers.append(
         'Set-Cookie',
         'clarix_draft_situation=' +
@@ -77,20 +79,23 @@ export default async function handler(req) {
       headers.append(
         'Set-Cookie',
         'clarix_draft_recommendation=' +
-        encodeURIComponent(JSON.stringify(draftData.recommendation)) +
+        encodeURIComponent(
+          JSON.stringify(draftData.recommendation)
+        ) +
         '; ' + cookieOptions
       )
     }
 
-    // Store session tokens in cookies so Supabase client picks them up
+    // Set session cookies so Supabase client
+    // picks up the session on the next page load
     headers.append(
       'Set-Cookie',
-      'sb-access-token=' + data.session.access_token +
+      'sb-access-token=' + session.access_token +
       '; ' + cookieOptions
     )
     headers.append(
       'Set-Cookie',
-      'sb-refresh-token=' + data.session.refresh_token +
+      'sb-refresh-token=' + session.refresh_token +
       '; ' + cookieOptions
     )
 
