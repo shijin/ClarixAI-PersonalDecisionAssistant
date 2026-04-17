@@ -232,17 +232,17 @@ function getQuickSuggestions(assumption) {
   return ["This is incorrect", "My situation is different"];
 }
 
-function AssumptionRow({ assumption, index, onCorrect }) {
+function AssumptionRow({ assumption, index, onPendingCorrection }) {
   const [isEditing, setIsEditing] = useState(false);
   const [correction, setCorrection] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const isReady = correction.trim().length > 2;
 
-  const handleSubmit = () => {
+  const handlePending = () => {
     if (!isReady) return;
     setSubmitted(true);
     setIsEditing(false);
-    onCorrect(correction.trim());
+    onPendingCorrection(assumption, correction.trim());
   };
 
   const handleCancel = () => {
@@ -267,7 +267,7 @@ function AssumptionRow({ assumption, index, onCorrect }) {
                               submitted ? "text-brand-teal-mid" : "text-ink-30"
                             }`}
           >
-            {submitted ? "Corrected" : "Assumed"}
+            {submitted ? "Correction pending" : "Assumed"}
           </span>
           <p
             className={`text-body-sm leading-relaxed transition-all duration-200
@@ -285,7 +285,18 @@ function AssumptionRow({ assumption, index, onCorrect }) {
                 className="w-4 h-4 bg-brand-teal-light rounded-full
                               flex items-center justify-center flex-shrink-0"
               >
-                <IconCheck />
+                <svg
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="#0F6E56"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
               <p className="text-body-sm text-brand-teal font-medium">
                 {correction}
@@ -351,7 +362,7 @@ function AssumptionRow({ assumption, index, onCorrect }) {
             ))}
           </div>
           <button
-            onClick={handleSubmit}
+            onClick={handlePending}
             disabled={!isReady}
             className={`h-9 rounded-lg text-[13px] font-bold
                         transition-colors duration-150
@@ -361,7 +372,7 @@ function AssumptionRow({ assumption, index, onCorrect }) {
                             : "bg-surface-3 text-ink-30 cursor-not-allowed"
                         }`}
           >
-            Update recommendation
+            Add correction
           </button>
         </div>
       )}
@@ -1030,6 +1041,7 @@ function RecommendationResult({
   const [showSavePulse, setShowSavePulse] = useState(true);
   const [showSaveTooltip, setShowSaveTooltip] = useState(true);
   const [afterCorrection, setAfterCorrection] = useState(false);
+  const [pendingCorrections, setPendingCorrections] = useState({});
 
   // Show the pulse and tooltip for 4 seconds after load
   // then fade them out so they do not become annoying
@@ -1231,12 +1243,42 @@ function RecommendationResult({
                     key={i}
                     assumption={assumption}
                     index={i}
-                    onCorrect={(correctedValue) =>
-                      onCorrectAssumption(assumption, correctedValue)
-                    }
+                    onPendingCorrection={(original, correction) => {
+                      setPendingCorrections((prev) => ({
+                        ...prev,
+                        [original]: correction,
+                      }));
+                    }}
                   />
                 ))}
               </div>
+
+              {/* Apply all corrections button */}
+              {Object.keys(pendingCorrections).length > 0 && (
+                <button
+                  onClick={() => onCorrectAssumption(pendingCorrections)}
+                  className="w-full mt-3 h-11 bg-brand-purple text-white
+                             rounded-xl text-[13px] font-bold
+                             flex items-center justify-center gap-2
+                             transition-colors duration-150"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Apply {Object.keys(pendingCorrections).length} correction
+                  {Object.keys(pendingCorrections).length > 1 ? "s" : ""} and
+                  update
+                </button>
+              )}
             </div>
           )}
 
@@ -1449,16 +1491,27 @@ export default function RecommendationScreen() {
     await fetchRecommendation(enriched, false);
   };
 
-  const handleCorrectAssumption = async (originalAssumption, correction) => {
+  const handleCorrectAssumption = async (corrections) => {
+    const correctionLines = Object.entries(corrections)
+      .map(
+        ([original, correction]) =>
+          'We assumed "' +
+          original +
+          '" but the user corrected this to: "' +
+          correction +
+          '".',
+      )
+      .join("\n");
+
     const enriched =
       situation +
-      '\n\nCorrection to an assumption: We assumed "' +
-      originalAssumption +
-      '" but the user has corrected this: "' +
-      correction +
-      '". Please update your recommendation to reflect this correction.';
+      "\n\nCorrections to assumptions:\n" +
+      correctionLines +
+      "\n\nPlease update your recommendation to reflect all these corrections.";
+
     setSituation(enriched);
     sessionStorage.setItem("clarix_situation", enriched);
+    localStorage.setItem("clarix_situation", enriched);
     await fetchRecommendation(enriched, true);
 
     // Show save nudge again after assumption correction
