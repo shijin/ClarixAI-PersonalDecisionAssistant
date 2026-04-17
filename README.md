@@ -1,4 +1,4 @@
-# Clarix — AI Personal Decision Assistant
+# Clarix - AI Personal Decision Assistant
 
 > Stop researching. Start deciding.
 
