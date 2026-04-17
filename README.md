@@ -5,7 +5,7 @@
 Clarix is an AI-powered personal decision assistant that helps Indians make confident financial and career decisions without the noise of generic advice. Describe your situation in plain language and get a clear, reasoned recommendation built around your specific income, goals, and constraints — in under 15 seconds.
 
 **Live Product:** [Link](https://clarix-ai-personal-decision-assista.vercel.app)  
-**Video Walkthrough:**
+**Video Walkthrough:** [Link](https://youtu.be/gLxBKVAQLFY)
 
 ---
 
@@ -129,32 +129,32 @@ Row Level Security (RLS) is enabled on all tables. Users can only read and write
 
 ## Project Structure
 
-artifacts/clarix/
-├── src/
-│   ├── screens/
-│   │   ├── public/          # Landing, shared recommendation
-│   │   ├── auth/            # Sign in, email verification, callback
-│   │   ├── decision/        # Intake, follow-up, conversation
-│   │   ├── result/          # Recommendation, save, share, defence
-│   │   ├── app/             # Home, history, past decision, context profile
-│   │   ├── account/         # Account, notifications, billing, help
-│   │   └── utility/         # Error, empty state, upgrade
-│   ├── components/
-│   │   └── layout/          # BottomNav, ProtectedRoute
-│   ├── lib/
-│   │   ├── claude.js        # Claude API integration
-│   │   ├── supabase.js      # Supabase client
-│   │   └── storage.js       # localStorage and sessionStorage helper
-│   ├── hooks/
-│   │   └── useDecision.js   # Supabase CRUD for decisions
-│   ├── context/
-│   │   └── UserContext.jsx  # Auth state management
-│   └── constants/
-│       ├── routes.js        # All route constants
-│       └── prompts.js       # Claude system prompt and user prompt builder
-├── vercel.json              # Client-side routing rewrites
-├── vite.config.ts           # Vite configuration
-└── package.json
+artifacts/clarix/  
+├── src/  
+│   ├── screens/  
+│   │   ├── public/          # Landing, shared recommendation  
+│   │   ├── auth/            # Sign in, email verification, callback  
+│   │   ├── decision/        # Intake, follow-up, conversation  
+│   │   ├── result/          # Recommendation, save, share, defence  
+│   │   ├── app/             # Home, history, past decision, context profile  
+│   │   ├── account/         # Account, notifications, billing, help  
+│   │   └── utility/         # Error, empty state, upgrade  
+│   ├── components/  
+│   │   └── layout/          # BottomNav, ProtectedRoute  
+│   ├── lib/  
+│   │   ├── claude.js        # Claude API integration  
+│   │   ├── supabase.js      # Supabase client  
+│   │   └── storage.js       # localStorage and sessionStorage helper  
+│   ├── hooks/  
+│   │   └── useDecision.js   # Supabase CRUD for decisions  
+│   ├── context/  
+│   │   └── UserContext.jsx  # Auth state management  
+│   └── constants/  
+│       ├── routes.js        # All route constants  
+│       └── prompts.js       # Claude system prompt and user prompt builder  
+├── vercel.json              # Client-side routing rewrites  
+├── vite.config.ts           # Vite configuration  
+└── package.json  
 
 ---
 
