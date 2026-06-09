@@ -327,6 +327,18 @@ Payment via Razorpay — coming in V1.1.
 
 ---
 
+## AI Evaluation Framework
+
+Clarix includes a structured evaluation framework built with Promptfoo to measure recommendation quality.
+
+**Week 1 results:** 10/10 test cases passing  
+**Genuine issues found:** 1  
+**Prompt improvements made:** 2  
+
+See the [evals folder](./evals) for full test cases, findings, and how to run the evaluation yourself.
+
+---
+
 ## About
 
 Built by **Shijin Ramesh** as a 0 to 1 product management portfolio project — covering the complete product lifecycle from market research and PRD to technical build and production deployment.
