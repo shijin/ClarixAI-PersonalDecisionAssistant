@@ -182,8 +182,6 @@ and still have behaviour that harms user trust.
 
 ---
 
----
-
 ## Day 4 — Robustness and Consistency Testing
 
 ### What was tested
