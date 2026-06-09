@@ -30,7 +30,7 @@ prompts:
          follow-up answer. Never state a confident 
          specific amount when the input is contradictory 
          or unclear.
-
+      
       Respond in this exact JSON format:
       {
         "recommendation": "one clear specific recommendation",
@@ -367,3 +367,220 @@ tests:
           return text.includes("scss") || 
                  text.includes("fixed deposit") || 
                  text.includes("fd");
+# ─────────────────────────────────────
+  # DAY 4 — ROBUSTNESS AND CONSISTENCY
+      # Same situation described 5 different ways
+      # Core recommendation should stay consistent
+      # ─────────────────────────────────────
+
+  - description: "Consistency V1 — Standard phrasing"
+    vars:
+        situation: >
+            I am 26 years old, software engineer in Pune,
+            earning Rs 68,000 per month. No dependents,
+            no existing insurance. I want term insurance.
+        assert:
+          - type: javascript
+            label: "Must recommend term insurance with specific coverage"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              return text.includes("term") &&
+                     (text.includes("crore") || text.includes("lakh"));
+
+          - type: javascript
+            label: "Coverage amount must be in reasonable bracket for income"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              const hasReasonable =
+                text.includes("50 lakh") ||
+                text.includes("₹50") ||
+                text.includes("68 lakh") ||
+                text.includes("75 lakh") ||
+                text.includes("1 crore") ||
+                text.includes("₹1 crore") ||
+                text.includes("1.5 crore");
+              const hasTooLow =
+                text.includes("10 lakh") ||
+                text.includes("15 lakh") ||
+                text.includes("20 lakh") ||
+                text.includes("25 lakh");
+              const hasTooHigh =
+                text.includes("3 crore") ||
+                text.includes("4 crore") ||
+                text.includes("5 crore");
+              return hasReasonable && !hasTooLow && !hasTooHigh;
+
+  - description: "Consistency V2 — Casual phrasing"
+    vars:
+        situation: >
+            hey so im 26, software engineer, pune, 
+            salary is 68k per month. single, no insurance yet. 
+            need term insurance advice.
+        assert:
+          - type: javascript
+            label: "Must still recommend term insurance despite casual phrasing"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              return text.includes("term") &&
+                     (text.includes("crore") || text.includes("lakh"));
+
+          - type: javascript
+            label: "Coverage amount must be in reasonable bracket for income"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              const hasReasonable =
+                text.includes("50 lakh") ||
+                text.includes("₹50") ||
+                text.includes("68 lakh") ||
+                text.includes("75 lakh") ||
+                text.includes("1 crore") ||
+                text.includes("₹1 crore") ||
+                text.includes("1.5 crore");
+              const hasTooLow =
+                text.includes("10 lakh") ||
+                text.includes("15 lakh") ||
+                text.includes("20 lakh") ||
+                text.includes("25 lakh");
+              const hasTooHigh =
+                text.includes("3 crore") ||
+                text.includes("4 crore") ||
+                text.includes("5 crore");
+              return hasReasonable && !hasTooLow && !hasTooHigh;
+
+  - description: "Consistency V3 — Hindi English mix"
+    vars:
+        situation: >
+            Main 26 saal ka hoon, software engineer hoon Pune mein.
+            Meri salary Rs 68,000 per month hai. 
+            Koi dependent nahi hai. Term insurance lena chahta hoon.
+        assert:
+          - type: javascript
+            label: "Must understand Hindi English mix and recommend term insurance"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              return text.includes("term") &&
+                     (text.includes("crore") || text.includes("lakh"));
+
+          - type: javascript
+            label: "Coverage amount must be in reasonable bracket for income"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              const hasReasonable =
+                text.includes("50 lakh") ||
+                text.includes("₹50") ||
+                text.includes("68 lakh") ||
+                text.includes("75 lakh") ||
+                text.includes("1 crore") ||
+                text.includes("₹1 crore") ||
+                text.includes("1.5 crore");
+              const hasTooLow =
+                text.includes("10 lakh") ||
+                text.includes("15 lakh") ||
+                text.includes("20 lakh") ||
+                text.includes("25 lakh");
+              const hasTooHigh =
+                text.includes("3 crore") ||
+                text.includes("4 crore") ||
+                text.includes("5 crore");
+              return hasReasonable && !hasTooLow && !hasTooHigh;
+
+  - description: "Consistency V4 — Emotional framing"
+    vars:
+        situation: >
+            I am really worried about my future. I am 26 years old,
+            earning Rs 68,000 in Pune as a software engineer.
+            I am single with no family depending on me right now
+            but I keep putting off getting insurance and I feel
+            irresponsible. Please help me.
+        assert:
+          - type: javascript
+            label: "Must give practical recommendation despite emotional framing"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              return text.includes("term") &&
+                     (text.includes("crore") || text.includes("lakh"));
+
+          - type: javascript
+            label: "Must not be dismissive of emotional context"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              const isEmpathetic =
+                    text.includes("underst") ||
+                    text.includes("good step") ||
+                    text.includes("right") ||
+                    text.includes("smart") ||
+                    text.includes("wise");
+              return isEmpathetic;
+
+          - type: javascript
+            label: "Coverage amount must be in reasonable bracket for income"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              const hasReasonable =
+                text.includes("50 lakh") ||
+                text.includes("₹50") ||
+                text.includes("68 lakh") ||
+                text.includes("75 lakh") ||
+                text.includes("1 crore") ||
+                text.includes("₹1 crore") ||
+                text.includes("1.5 crore");
+              const hasTooLow =
+                text.includes("10 lakh") ||
+                text.includes("15 lakh") ||
+                text.includes("20 lakh") ||
+                text.includes("25 lakh");
+              const hasTooHigh =
+                text.includes("3 crore") ||
+                text.includes("4 crore") ||
+                text.includes("5 crore");
+              return hasReasonable && !hasTooLow && !hasTooHigh;
+
+  - description: "Consistency V5 — Minimal information"
+    vars:
+        situation: >
+            26 year old. Software engineer. Pune. Rs 68,000. 
+            No insurance. Want term insurance.
+        assert:
+          - type: javascript
+            label: "Must give recommendation or ask follow-up for minimal input"
+            value: |
+              const data = JSON.parse(output);
+              const text = JSON.stringify(data).toLowerCase();
+              const givesInsurance = text.includes("term") &&
+                                     (text.includes("crore") ||
+                                      text.includes("lakh"));
+              const asksFollowUp = data.followUpNeeded === true;
+              return givesInsurance || asksFollowUp;
+
+          - type: javascript
+            label: "Coverage amount must be in reasonable bracket for income"
+            value: |
+                const data = JSON.parse(output);
+                const text = JSON.stringify(data).toLowerCase();
+                const hasReasonable =
+                  text.includes("50 lakh") ||
+                  text.includes("₹50") ||
+                  text.includes("68 lakh") ||
+                  text.includes("75 lakh") ||
+                  text.includes("1 crore") ||
+                  text.includes("₹1 crore") ||
+                  text.includes("1.5 crore");
+                const hasTooLow =
+                  text.includes("10 lakh") ||
+                  text.includes("15 lakh") ||
+                  text.includes("20 lakh") ||
+                  text.includes("25 lakh");
+                const hasTooHigh =
+                  text.includes("3 crore") ||
+                  text.includes("4 crore") ||
+                  text.includes("5 crore");
+                return hasReasonable && !hasTooLow && !hasTooHigh;
