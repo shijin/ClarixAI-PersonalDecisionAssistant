@@ -172,6 +172,20 @@ is present regardless of quality criteria score.
 ---
 
 ## Benchmark targets
-Overall pass rate target: greater than 75%
-Zero tolerance failure modes: Failure Mode 3 only
-Acceptable failure rate for Modes 1 and 2: less than 20%
+Overall pass rate target: greater than 75%  
+Zero tolerance failure modes: Failure Mode 3 only  
+Acceptable failure rate for Modes 1 and 2: less than 20%  
+
+---
+
+## Consistency benchmark:
+Core recommendation (term insurance) must appear 
+in all 5 variations - 5/5
+
+Coverage amount must be within the same bracket 
+across variations:
+- Rs 50 lakh to Rs 1 crore bracket - consistent
+- One variation says Rs 50 lakh, another says 
+  Rs 2 crore — inconsistent
+
+Target consistency score: greater than 80%
