@@ -1,0 +1,369 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "Clarix AI Recommendation Quality Evaluation v1.0"
+
+prompts:
+  - label: "Clarix System Prompt"
+    raw: |
+      You are Clarix, an AI personal decision assistant built 
+      for Indian users. Your job is to help users make confident 
+      financial and career decisions.
+
+      RULES YOU MUST FOLLOW:
+      1. Always give exactly ONE specific recommendation. Never give 
+         a list of options or say "it depends."
+      2. Always reference at least one specific detail from the 
+         user's situation such as their income, age, or city.
+      3. Always include one honest trade-off the user needs to know.
+      4. Never recommend consulting a financial advisor as your 
+         primary answer.
+      5. All amounts must be in Indian Rupees and relevant to 
+         the Indian financial context.
+      6. If the user provides contradictory information flag it 
+         explicitly before giving a recommendation.
+      7. Return ONLY the raw JSON object. Do not wrap it in 
+         markdown code fences or backticks. Do not add any 
+         text before or after the JSON.
+      8. When followUpNeeded is true, the recommendation 
+         field must start with "Provisionally:" and include 
+         a caveat that this may change based on the 
+         follow-up answer. Never state a confident 
+         specific amount when the input is contradictory 
+         or unclear.
+
+      Respond in this exact JSON format:
+      {
+        "recommendation": "one clear specific recommendation",
+        "summary": "2-3 sentence explanation grounded in their numbers",
+        "reasons": [
+          {"title": "reason title", "body": "explanation with their specific numbers"}
+        ],
+        "tradeoff": {
+          "title": "trade-off title",
+          "body": "honest explanation of what they are giving up"
+        },
+        "assumptions": [
+          "assumption 1",
+          "assumption 2"
+        ],
+        "followUpNeeded": false,
+        "followUpQuestion": null
+      }
+
+      User situation: {{situation}}
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-20250514
+    config:
+      max_tokens: 1500
+
+defaultTest:
+  options:
+    transform: |
+      return output.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+  assert:
+    - type: is-json
+      label: "Response must be valid JSON"
+
+    - type: javascript
+      label: "Must give single recommendation not multiple options"
+      value: |
+        const data = JSON.parse(output);
+        const rec = data.recommendation || "";
+        const failPhrases = [
+          "you could consider",
+          "another option",
+          "alternatively",
+          "on the other hand",
+          "option 1",
+          "option 2"
+        ];
+        const hasFail = failPhrases.some(p => 
+          rec.toLowerCase().includes(p)
+        );
+        return !hasFail;
+
+    - type: javascript
+      label: "Must not give generic advice"
+      value: |
+        const data = JSON.parse(output);
+        const rec = data.recommendation || "";
+        const genericPhrases = [
+          "consult a financial advisor",
+          "based on your needs",
+          "adequate coverage",
+          "it depends"
+        ];
+        const hasGeneric = genericPhrases.some(p => 
+          rec.toLowerCase().includes(p)
+        );
+        return !hasGeneric;
+
+    - type: javascript
+      label: "Must include a trade-off"
+      value: |
+        const data = JSON.parse(output);
+        return data.tradeoff && 
+               data.tradeoff.title && 
+               data.tradeoff.title.length > 10;
+
+    - type: javascript
+      label: "Must include assumptions"
+      value: |
+        const data = JSON.parse(output);
+        return data.assumptions && 
+               data.assumptions.length > 0;
+
+tests:
+  - description: "Standard insurance case"
+    vars:
+      situation: >
+        I am 26 years old, software engineer in Pune, 
+        earning Rs 68,000 per month. No dependents, 
+        no existing insurance. I want term insurance 
+        but do not know which plan to choose or 
+        how much cover I need.
+    assert:
+      - type: javascript
+        label: "Must mention specific coverage amount"
+        value: |
+          const data = JSON.parse(output);
+          const rec = data.recommendation || "";
+          return rec.includes("crore") || rec.includes("lakh");
+
+      - type: javascript
+        label: "Must reference income or age"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          return text.includes("68") || 
+                 text.includes("26") || 
+                 text.includes("pune");
+
+  - description: "Investment case — first jobber"
+    vars:
+      situation: >
+        I am 24 years old, just started my first job 
+        in Mumbai earning Rs 45,000 per month. I send 
+        Rs 10,000 home every month. I have Rs 50,000 
+        saved and want to start investing but do not 
+        know where to begin. I have no loans and no 
+        insurance yet. I want to build wealth over 
+        the next 10 years.
+    assert:
+      - type: javascript
+        label: "Must reference actual disposable income"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data);
+          return text.includes("45") || 
+                 text.includes("10,000") || 
+                 text.includes("35");
+
+      - type: javascript
+        label: "Must mention SIP or mutual fund specifically"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          return text.includes("sip") || 
+                 text.includes("mutual fund");
+
+  - description: "Career case — job offer with ESOP"
+    vars:
+      situation: >
+        I am 29 years old, data analyst in Hyderabad, 
+        earning Rs 72,000 per month. I have a job offer 
+        from a startup paying Rs 95,000 per month with 
+        ESOPs worth Rs 40 lakhs vesting over 4 years. 
+        My current company is stable but growth is slow. 
+        No dependents, Rs 2 lakhs savings. Should I 
+        take the offer or stay?
+    assert:
+      - type: javascript
+        label: "Must give clear stay or go decision"
+        value: |
+          const data = JSON.parse(output);
+          const rec = data.recommendation.toLowerCase();
+          return rec.includes("take") || 
+                 rec.includes("accept") || 
+                 rec.includes("stay") || 
+                 rec.includes("decline");
+
+      - type: javascript
+        label: "Must mention ESOP risk"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          return text.includes("esop") || 
+                 text.includes("vesting") || 
+                 text.includes("startup risk");
+
+  - description: "Edge case — smoker applying for insurance"
+    vars:
+      situation: >
+        I am 28 years old, smoker, earning Rs 55,000 
+        per month in Mumbai. I smoke 10 cigarettes a day. 
+        One dependent parent. I want term insurance. 
+        How much will it cost and which plan should I get?
+    assert:
+      - type: javascript
+        label: "Must acknowledge smoker status affects premium"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          return text.includes("smok") || 
+                 text.includes("premium") || 
+                 text.includes("higher");
+
+  - description: "Edge case — contradictory information"
+    vars:
+      situation: >
+        I am 25 years old but have been working for 
+        15 years. I earn Rs 2 lakhs per month but 
+        have zero savings. I want to start investing.
+    assert:
+      - type: javascript
+        label: "Must ask follow-up when info is contradictory"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          const asksFollowUp = data.followUpNeeded === true;
+          const flagsIssue = text.includes("contradict") ||
+                             text.includes("clarif") ||
+                             text.includes("unusual") ||
+                             text.includes("15 years") ||
+                             text.includes("confirm");
+          return asksFollowUp || flagsIssue;
+
+      - type: javascript
+        label: "Recommendation field itself must be provisional when followUpNeeded is true"
+        value: |
+            const data = JSON.parse(output);
+            if (data.followUpNeeded !== true) return true;
+            const rec = (data.recommendation || '').toLowerCase();
+            const summary = (data.summary || '').toLowerCase();
+            const isProvisional = 
+                  rec.includes("assuming") ||
+                  rec.includes("if your") ||
+                  rec.includes("provisional") ||
+                  rec.includes("subject to clarification") ||
+                  rec.includes("pending") ||
+                  summary.includes("assuming your") ||
+                  summary.includes("if the information");
+            return isProvisional;
+
+  - description: "Edge case — minimal input"
+    vars:
+      situation: "26 year old. Rs 68,000. Pune. Insurance."
+    assert:
+      - type: javascript
+        label: "Must ask follow-up or give insurance recommendation for minimal input"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          const asksFollowUp = data.followUpNeeded === true;
+          const givesInsurance = text.includes("insurance") ||
+                                 text.includes("term");
+          return asksFollowUp || givesInsurance;
+
+      - type: javascript
+        label: "Must make at least 2 assumptions for minimal input"
+        value: |
+          const data = JSON.parse(output);
+          return data.assumptions && 
+                 data.assumptions.length >= 2;
+
+  - description: "Failure mode test — vague situation"
+    vars:
+      situation: >
+        I want to make good financial decisions 
+        for my future. What should I do?
+    assert:
+      - type: javascript
+        label: "Must ask follow-up when situation is too vague"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          const asksFollowUp = data.followUpNeeded === true;
+          const acknowledgesVagueness = 
+                text.includes("income") ||
+                text.includes("more information") ||
+                text.includes("specific") ||
+                text.includes("details") ||
+                text.includes("without knowing");
+          return asksFollowUp || acknowledgesVagueness;
+
+  - description: "Housing case — rent vs buy"
+    vars:
+      situation: >
+        I am 32 years old, working in Bangalore 
+        earning Rs 1,20,000 per month. I am currently 
+        renting a 2BHK for Rs 25,000 per month. 
+        I have Rs 10 lakhs saved and am thinking of 
+        buying a flat worth Rs 60 lakhs. Should I 
+        buy now or continue renting?
+    assert:
+      - type: javascript
+        label: "Must give clear buy or rent decision"
+        value: |
+          const data = JSON.parse(output);
+          const rec = data.recommendation.toLowerCase();
+          return rec.includes("buy") || 
+                 rec.includes("rent") || 
+                 rec.includes("continue");
+
+  - description: "Purchase case — laptop decision"
+    vars:
+      situation: >
+        I am 28 years old, software developer in Chennai. 
+        I want to buy a new laptop for work. My budget 
+        is Rs 80,000. I mostly do coding, video calls, 
+        and occasional video editing. Should I go for 
+        MacBook Air M2 or a Windows laptop like Dell XPS?
+    assert:
+      - type: javascript
+        label: "Must recommend one specific laptop not both"
+        value: |
+          const data = JSON.parse(output);
+          const rec = data.recommendation.toLowerCase();
+          const firstWord = rec.split(' ')[0];
+          const hasClear = rec.includes("buy the") || 
+                     rec.includes("choose the") ||
+                     rec.includes("go with") ||
+                     rec.includes("get the");
+          return hasClear;
+
+  - description: "Senior citizen case"
+    vars:
+      situation: >
+        I am 67 years old, retired, living in Chennai. 
+        I receive a pension of Rs 18,000 per month. 
+        My fixed deposit of Rs 5 lakhs has just matured. 
+        My son says put it in SCSS. My daughter says 
+        keep it in savings account. I want safety and 
+        regular income.
+    assert:
+      - type: javascript
+        label: "Must use simple language for senior citizen"
+        value: |
+          const data = JSON.parse(output);
+          const rec = data.recommendation || "";
+          const complexPhrases = [
+            "volatility",
+            "alpha",
+            "beta",
+            "derivative"
+          ];
+          const hasComplex = complexPhrases.some(p => 
+            rec.toLowerCase().includes(p)
+          );
+          return !hasComplex;
+
+      - type: javascript
+        label: "Must mention SCSS or FD specifically"
+        value: |
+          const data = JSON.parse(output);
+          const text = JSON.stringify(data).toLowerCase();
+          return text.includes("scss") || 
+                 text.includes("fixed deposit") || 
+                 text.includes("fd");
