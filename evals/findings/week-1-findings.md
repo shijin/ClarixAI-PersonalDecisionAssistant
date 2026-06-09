@@ -182,31 +182,57 @@ and still have behaviour that harms user trust.
 
 ---
 
+---
+
 ## Day 4 — Robustness and Consistency Testing
 
-### Test design
-Same insurance scenario described 5 different ways:
-- Standard formal phrasing
+### What was tested
+Same insurance scenario described 5 different ways 
+to measure whether Clarix gives consistent 
+recommendations regardless of input phrasing.
+
+Variations tested:
+- Standard formal English
 - Casual English
 - Hindi English mix
 - Emotional framing
-- Minimal bullet style
+- Minimal bullet style input
 
 ### Results
-Core recommendation consistency: 5/5 — 100%
-Coverage bracket consistency: 5/5 — 100%
+
+| Metric | Score |
+|---|---|
+| Core recommendation consistency | 5/5 — 100% |
+| Coverage bracket consistency | 5/5 — 100% |
+
+All 5 variations recommended coverage in the 
+Rs 50 lakhs to Rs 1 crore bracket which is 
+appropriate for a 26 year old earning 
+Rs 68,000 per month.
 
 ### Key finding — Prompt interference
-Three attempts to fix exact coverage amount consistency through prompt rules made consistency worse in each iteration:
-- Before any fix: 4/5 — 80%
-- After Rule 9 v1: 3/5 — 60%
-- After Rule 9 v2: 0/5 — 0%
+
+Three attempts to fix exact coverage amount 
+consistency through prompt rules made 
+consistency worse in each iteration.
+
+| Iteration | Consistency score |
+|---|---|
+| Before any fix | 4/5 — 80% |
+| After Rule 9 version 1 | 3/5 — 60% |
+| After Rule 9 version 2 | 0/5 — 0% |
+
+Root cause: Prompt engineering is not modular. Every rule interacts with every other rule. Adding a rule to fix one behaviour introduced interference with other behaviours.
 
 ### PM decision
-Redefined consistency metric from exact amount to bracket consistency. Reverted all Rule 9 changes. Model performs better without over-constraining rules.
+Reverted all Rule 9 changes. Redefined the consistency metric from exact coverage amount to bracket consistency. The model performs better with fewer constraints.
 
-### Lesson
-Prompt engineering is not modular. Every rule interacts with every other rule. Adding rules to fix one behaviour can break nother. Less is more in system prompts.
+### Lesson for AI PMs
+Know which aspects of LLM behaviour are fixable through prompt engineering and which are fundamental properties of the model. Exact output determinism is not achievable in probabilistic LLMs. Acceptable range 
+consistency is the right standard.
+
+### Note on caching
+Promptfoo caches API responses to save costs. To force fresh model responses run: promptfoo eval --no-cache
 
 ---
 
