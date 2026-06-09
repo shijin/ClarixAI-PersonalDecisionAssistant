@@ -182,6 +182,34 @@ and still have behaviour that harms user trust.
 
 ---
 
+## Day 4 — Robustness and Consistency Testing
+
+### Test design
+Same insurance scenario described 5 different ways:
+- Standard formal phrasing
+- Casual English
+- Hindi English mix
+- Emotional framing
+- Minimal bullet style
+
+### Results
+Core recommendation consistency: 5/5 — 100%
+Coverage bracket consistency: 5/5 — 100%
+
+### Key finding — Prompt interference
+Three attempts to fix exact coverage amount consistency through prompt rules made consistency worse in each iteration:
+- Before any fix: 4/5 — 80%
+- After Rule 9 v1: 3/5 — 60%
+- After Rule 9 v2: 0/5 — 0%
+
+### PM decision
+Redefined consistency metric from exact amount to bracket consistency. Reverted all Rule 9 changes. Model performs better without over-constraining rules.
+
+### Lesson
+Prompt engineering is not modular. Every rule interacts with every other rule. Adding rules to fix one behaviour can break nother. Less is more in system prompts.
+
+---
+
 ## How to Reproduce
 
 1. Install Promptfoo: `npm install -g promptfoo`
