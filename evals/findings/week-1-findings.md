@@ -234,6 +234,88 @@ Promptfoo caches API responses to save costs. To force fresh model responses run
 
 ---
 
+## Day 5 — Assumption Quality Evaluation
+
+### What was tested
+Manual evaluation of assumption quality across 4 test cases. Each assumption scored against 4 criteria — relevance, reasonableness, completeness, and necessity.
+
+Maximum score per assumption: 8 points
+Minimum acceptable score: 5 points
+Overall target: greater than 75%
+
+### Scoring rubric
+
+| Criterion | Description | Max Points |
+|---|---|---|
+| Relevance | Is the assumption directly relevant to the decision? | 2 |
+| Reasonableness | Is it a fair inference from what the user said? | 2 |
+| Completeness | Are obvious sub-assumptions covered? | 2 |
+| Necessity | Does the recommendation depend on this assumption? | 2 |
+
+### Results
+
+| Test Case | Score | Maximum | Percentage | Grade |
+|---|---|---|---|---|
+| Smoker Insurance 28yr Mumbai | 38 | 40 | 95% | Excellent |
+| Investment First Jobber 24yr Mumbai | 35 | 40 | 87.5% | Good |
+| Career ESOP 29yr Hyderabad | 26 | 32 | 81.25% | Good with dangerous gap |
+| Senior SCSS 67yr Chennai | 28 | 32 | 87.5% | Good |
+| **Overall** | **127** | **144** | **88.2%** | **Good** |
+
+### Standout finding — Smoker honesty assumption
+
+The strongest individual assumption across all 4 test cases was Assumption 5 in the smoker insurance case: "You will be honest about your smoking status in your application."
+
+This is a proactive user-protective assumption that most generic AI tools would never surface. Non-disclosure of smoking is the most common reason term insurance claims are rejected in India. 
+Claude flagged this without being asked. Score: 8/8.
+
+### Three issues found
+
+**Issue 1 — Bundled assumptions (Test Case 2)**
+Assumption 2 in the investment case bundled city preference with income growth into one assumption. These are unrelated factors with different relevance scores. City preference is irrelevant to investment advice. Income 
+growth is highly relevant.
+
+Best practice: Each assumption should test exactly one thing.
+
+Score impact: 4/8 — weakest assumption in Test Case 2.
+
+**Issue 2 — Risk tolerance assumed not verified (Test Case 2)**
+Claude assumed the user could handle market volatility without asking. Risk tolerance is a behavioural attribute that cannot be inferred from income or age alone. A user who panic-sells during a 30% market drawdown loses more than someone in a conservative instrument.
+
+Score impact: 7/8 — one point deducted on reasonableness.
+
+Recommended fix: Add prompt rule requiring risk tolerance to be either user-stated or asked as a follow-up question. Never assumed.
+
+**Issue 3 — ESOP complexity gap (Test Case 3) — highest priority**
+The ESOP terms assumption scored 4/8 — the lowest individual assumption score in the entire evaluation.
+
+Claude assumed ESOP terms were standard without asking about:
+- Exercise price versus fair market value
+- Cliff period and vesting schedule
+- Acquisition clause — what happens to 
+  unvested ESOPs if company is acquired
+- Liquidity timeline — when can the 
+  user actually realise the value
+
+This is dangerous. The recommendation treated Rs 40 lakhs as real money when it could be worth Rs 0 depending on the terms.
+
+Score impact: 4/8 — reasonableness 0/2, completeness 0/2.
+
+Recommended fix (highest priority): When ESOPs, stock options, or equity compensation appear Claude must ask a follow-up question about specific terms before treating the value as real money in the recommendation.
+
+### Recommended prompt fixes for Day 6
+
+| Priority | Fix | Affected test cases |
+|---|---|---|
+| High | ESOP terms must trigger follow-up question | Career cases |
+| Medium | Risk tolerance must be asked or stated | Investment cases |
+| Low | Senior citizen payment frequency alignment | Retirement cases |
+
+### Scorecard
+Full scoring spreadsheet with all 18 assumptions evaluated across 4 criteria is available in the evals folder.
+
+---
+
 ## How to Reproduce
 
 1. Install Promptfoo: `npm install -g promptfoo`
