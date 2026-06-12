@@ -1,4 +1,4 @@
-# Clarix AI Evaluation — Week 1 & 2 Findings
+# Clarix AI Evaluation - Week 1 Findings
 **Date:** June 2026  
 **Tool:** Promptfoo v0.121.15  
 **Model:** claude-sonnet-4-20250514  
