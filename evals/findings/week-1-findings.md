@@ -1,4 +1,4 @@
-# Clarix AI Evaluation — Week 1 Findings
+# Clarix AI Evaluation — Week 1 & 2 Findings
 **Date:** June 2026  
 **Tool:** Promptfoo v0.121.15  
 **Model:** claude-sonnet-4-20250514  
@@ -168,15 +168,11 @@ and still have behaviour that harms user trust.
 
 ## Recommendations for Week 2
 
-1. Test robustness — does Clarix give consistent 
-   recommendations when the same situation is described 
-   in 5 different ways?
+1. Test robustness — does Clarix give consistent recommendations when the same situation is described in 5 different ways?
 
-2. Test assumption quality specifically — are the 
-   assumptions Claude makes reasonable and relevant?
+2. Test assumption quality specifically — are the assumptions Claude makes reasonable and relevant?
 
-3. Add 10 more test cases covering Hindi-English 
-   mixed inputs and out-of-scope requests.
+3. Add 10 more test cases covering Hindi-English mixed inputs and out-of-scope requests.
 
 4. Measure consistency score across input variations.
 
@@ -185,9 +181,7 @@ and still have behaviour that harms user trust.
 ## Day 4 — Robustness and Consistency Testing
 
 ### What was tested
-Same insurance scenario described 5 different ways 
-to measure whether Clarix gives consistent 
-recommendations regardless of input phrasing.
+Same insurance scenario described 5 different ways to measure whether Clarix gives consistent recommendations regardless of input phrasing.
 
 Variations tested:
 - Standard formal English
@@ -203,16 +197,11 @@ Variations tested:
 | Core recommendation consistency | 5/5 — 100% |
 | Coverage bracket consistency | 5/5 — 100% |
 
-All 5 variations recommended coverage in the 
-Rs 50 lakhs to Rs 1 crore bracket which is 
-appropriate for a 26 year old earning 
-Rs 68,000 per month.
+All 5 variations recommended coverage in the Rs 50 lakhs to Rs 1 crore bracket which is appropriate for a 26 year old earning Rs 68,000 per month.
 
 ### Key finding — Prompt interference
 
-Three attempts to fix exact coverage amount 
-consistency through prompt rules made 
-consistency worse in each iteration.
+Three attempts to fix exact coverage amount consistency through prompt rules made consistency worse in each iteration.
 
 | Iteration | Consistency score |
 |---|---|
@@ -299,7 +288,7 @@ Claude assumed ESOP terms were standard without asking about:
 
 This is dangerous. The recommendation treated Rs 40 lakhs as real money when it could be worth Rs 0 depending on the terms.
 
-Score impact: 4/8 — reasonableness 0/2, completeness 0/2.
+Score impact: 4/8 - reasonableness 0/2, completeness 0/2.
 
 Recommended fix (highest priority): When ESOPs, stock options, or equity compensation appear Claude must ask a follow-up question about specific terms before treating the value as real money in the recommendation.
 
@@ -313,6 +302,49 @@ Recommended fix (highest priority): When ESOPs, stock options, or equity compens
 
 ### Scorecard
 Full scoring spreadsheet with all 18 assumptions evaluated across 4 criteria is available in the evals folder.
+
+---
+
+
+## Day 6 - Implementing the Highest Priority Fix
+
+### Change implemented
+Added Rule 9 to the system prompt addressing the Day 5 finding on ESOP complexity. When equity compensation appears in the user's situation, Claude must now treat the value as uncertain and ask about exercise price, 
+vesting schedule, cliff period, and acquisition treatment before using the headline number in calculations.
+
+### Before and after - ESOP test case
+
+**Before:**
+- followUpNeeded: false
+- Assumption: "ESOP vesting schedule is standard 
+  (25% per year after 1-year cliff)"
+- Recommendation stated with full confidence, 
+  Rs 40 lakhs treated as real money
+
+**After:**
+- followUpNeeded: true
+- Recommendation: "Provisionally: Take the startup offer for the immediate 32% salary increase... but this recommendation may change significantly based on the ESOP terms"
+- Follow-up question: "What are the specific ESOP terms: exercise price per share, current share price, vesting schedule, cliff period, and what happens to unvested ESOPs if you leave or the company gets acquired?"
+
+This directly resolves the Day 5 finding 
+(scored 4/8 on reasonableness and completeness).
+
+### Side effect - assertion recalibration
+
+Adding Rule 9 caused the contradictory info test case to fail an existing assertion. The recommendation no longer started with "Provisionally:" — however followUpNeeded remained true and the model produced a highly 
+specific, substantive follow-up question addressing the contradiction directly.
+
+PM decision: This is not a regression. The model signaled uncertainty through a different valid mechanism — a substantive clarifying question — rather than the literal word "provisional." The assertion was updated to 
+accept either signal.
+
+### Final state
+15/15 passing.
+0 prompt rules reverted.
+1 genuine model behaviour improvement.
+1 assertion recalibration.
+
+### Key lesson
+Not every assertion failure after a prompt change is a regression. Distinguish between the model becoming less safe (revert the prompt) versus the model achieving safety through a different valid mechanism (fix the assertion).
 
 ---
 
