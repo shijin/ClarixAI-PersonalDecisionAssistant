@@ -348,6 +348,52 @@ Not every assertion failure after a prompt change is a regression. Distinguish b
 
 ---
 
+## Day 7 — Week 1 Summary
+
+### Final state
+15/15 test cases passing (100%)
+9 system prompt rules (up from 7)
+2 genuine model behaviour gaps found and fixed
+3 framework/assertion calibration issues found and fixed
+1 prompt change attempted and correctly reverted
+
+### The two real fixes shipped
+
+**Fix 1 - Provisional recommendations on contradictory input**
+When user input contains contradictions, the recommendation must signal uncertainty - either through provisional language or a substantive clarifying question — rather than stating specific figures with full confidence.
+
+**Fix 2 - ESOP and equity compensation handling**
+When equity compensation appears in a user's situation, Claude must treat the headline value as uncertain and ask about exercise price, vesting, cliff period, and acquisition treatment before factoring it into the recommendation.
+
+### The three eval calibration corrections
+
+**Correction 1 - Markdown fence stripping**
+Transform function needed an explicit return statement. Without it, 6 of 10 tests failed for reasons unrelated to model quality.
+
+**Correction 2 - Consistency metric redefinition**
+Exact coverage amount consistency is not a valid target for a probabilistic system. Redefined to bracket consistency (Rs 50L - Rs 1Cr for the test persona).
+
+**Correction 3 - Uncertainty signal broadening**
+"Provisional language" is one valid way to signal uncertainty to a user. A specific, substantive follow-up question is another. The assertion was narrowed to only the first and needed broadening.
+
+### The one reverted change
+
+Attempting to fix emotional-framing-driven coverage amount variance (Day 4) made consistency worse across two iterations (80% → 60% → 0%). Reverted entirely. 
+This is the clearest evidence in the whole framework that prompt rules are not modular - every addition risks interfering with existing behaviour.
+
+### What this framework demonstrates
+
+A complete AI evaluation cycle is not "write tests, get green checkmarks." It is:
+
+1. Define what good looks like before testing
+2. Separate framework errors from model errors
+3. Tighten assertions until they reveal genuine gaps
+4. Distinguish reversible mistakes from real fixes
+5. Know when the test is wrong, not the model
+6. Re-run the full suite after every change — nothing is modular
+
+---
+
 ## How to Reproduce
 
 1. Install Promptfoo: `npm install -g promptfoo`
